@@ -86,7 +86,7 @@ vercel link
 ```
 
 **Critical — Root Directory (monorepo):**  
-If the Git repo is the full workspace (e.g. `base-mini-app`, `basestrike`, `docs` at top level), the Vercel build will fail unless the project Root Directory is set.
+If the Git repo is the full workspace (e.g. `base-mini-app`, `basestrike`, `docs` at top level), the Vercel build will fail or deploy the wrong app unless the project Root Directory is set. **Base Build “not ready”** is often caused by building from the wrong root (so the deployed app never runs `sdk.actions.ready()` from `basestrike`).
 
 1. In Vercel: **Project basestrike** → **Settings** → **General** → **Root Directory**.
 2. Set to **`basestrike`** (no leading slash). Save.
@@ -99,7 +99,8 @@ export VERCEL_TOKEN="your-token"
 ./scripts/set-vercel-root.sh
 ```
 
-If the repo contains only the basestrike app (package.json at repo root), leave Root Directory **empty**.
+If the repo contains only the basestrike app (package.json at repo root), leave Root Directory **empty**.  
+Full verification steps: see [VERIFY-VERCEL-GH.md](./VERIFY-VERCEL-GH.md).
 
 ### 3.2 Configure Environment Variables
 
@@ -216,7 +217,7 @@ Should return valid manifest with all fields.
 
 ```bash
 # Manifest
-curl https://baserift.vercel.app/api/manifest
+curl https://baserift.vercel.app/.well-known/farcaster.json
 
 # Auth (with dev token)
 curl -X POST https://baserift.vercel.app/api/auth \
@@ -347,6 +348,15 @@ git push origin main
 # Vercel auto-deploys
 ```
 
+## Verify Vercel & GitHub (Base Build “not ready”)
+
+If Base Build preview shows **“not ready”** or the splash never hides, see **[VERIFY-VERCEL-GH.md](./VERIFY-VERCEL-GH.md)** for:
+
+- Ensuring Vercel **Root Directory** is **`basestrike`** (critical for this repo layout)
+- Verifying via Vercel Dashboard and CLI
+- Confirming GitHub branch and Vercel Git connection
+- Base Build `sdk.actions.ready()` and manifest checks
+
 ## Troubleshooting
 
 ### 404 on every page (Git import)
@@ -366,10 +376,9 @@ If you imported **steffenpharai/basestrike** (or similar) from Git and the deplo
 
 ### Manifest not loading
 
-- Check Vercel rewrites in `vercel.json`
-- Verify CORS headers
-- Test with curl
-- Check env vars loaded
+- Manifest is served at `/.well-known/farcaster.json` (route: `app/.well-known/farcaster.json/route.ts`).
+- Test: `curl https://your-app.vercel.app/.well-known/farcaster.json`
+- Ensure `minikit.config.ts` and env (e.g. `NEXT_PUBLIC_URL`) are correct.
 
 ### Webhook verification fails
 

@@ -124,7 +124,7 @@ npm run lint && npm run typecheck && npm test && npm run test:e2e
 
 **Reference:** https://docs.base.org/building-with-base/mini-apps/manifest
 
-The manifest is served at `/.well-known/farcaster.json` via the `/api/manifest` route.
+The manifest is served at `/.well-known/farcaster.json` (Base docs: https://docs.base.org/mini-apps/quickstart/migrate-existing-apps).
 
 **Key fields:**
 - `accountAssociation`: Generated via Base Build tool
@@ -135,7 +135,7 @@ The manifest is served at `/.well-known/farcaster.json` via the `/api/manifest` 
 - `miniapp.tags`: Max 5 tags
 - `miniapp.noindex`: Set to `true` in non-production
 
-**Configuration:** See `apps/web/lib/minikit.config.ts`
+**Configuration:** See `minikit.config.ts`
 
 #### Generating accountAssociation
 
@@ -385,7 +385,7 @@ forge coverage
 4. **Verify:**
    ```bash
    curl https://baserift.app/.well-known/farcaster.json
-   curl https://baserift.app/api/manifest
+   curl https://baserift.app/.well-known/farcaster.json
    ```
 
 ### Post-Deployment

@@ -9,7 +9,9 @@
     "lint": "eslint app lib components minikit.config.ts next.config.ts vitest.config.ts playwright.config.ts --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "vercel:verify": "vercel project inspect",
+    "vercel:set-root": "./scripts/set-vercel-root.sh"
   },
   "dependencies": {
     "@coinbase/onchainkit": "latest",

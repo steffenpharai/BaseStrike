@@ -16,7 +16,7 @@ Reference for building and deploying Base Mini Apps (Farcaster-compatible) on Ve
 ### Manifest (required for discovery)
 
 - **URL:** Manifest must be publicly accessible at `https://your-domain.com/.well-known/farcaster.json`.
-- **Implementation:** Use `/public/.well-known/farcaster.json` or a route that serves the manifest; Vercel can rewrite `/.well-known/farcaster.json` → `/api/manifest`.
+- **Implementation:** Serve manifest at `/.well-known/farcaster.json` (e.g. Next.js route `app/.well-known/farcaster.json/route.ts`).
 - **Required fields:** `accountAssociation` (header, payload, signature from [Base Build Account association tool](https://www.base.dev/preview?tab=account)), `miniapp.version` `"1"`, `miniapp.name` (≤32 chars), `homeUrl`, `iconUrl`, `splashImageUrl`, `splashBackgroundColor`, `primaryCategory`, `tags` (max 5), `tagline`, `heroImageUrl`, `screenshotUrls` (max 3). Add `webhookUrl` only if using notifications.
 - **Categories:** One of: `games`, `social`, `finance`, `utility`, `productivity`, `health-fitness`, `news-media`, `music`, `shopping`, `education`, `developer-tools`, `entertainment`, `art-creativity`.
 - **noindex:** Set `"noindex": true` for development/staging so the app is not indexed in search.
@@ -52,7 +52,7 @@ Reference for building and deploying Base Mini Apps (Farcaster-compatible) on Ve
 
 - **File:** Use `vercel.json` (or `vercel.ts`) in the app root (e.g. `basestrike/vercel.json`).
 - **Common settings:** `buildCommand`, `installCommand`, `framework`, `rewrites`, `headers`, `redirects`, `functions` (memory, duration, runtime).
-- **Manifest rewrite:** Ensure `/.well-known/farcaster.json` is rewritten to your manifest route (e.g. `/api/manifest`) so the Base app can fetch the manifest from your Vercel URL.
+- **Manifest:** Ensure `/.well-known/farcaster.json` is served so the Base app can fetch the manifest.
 
 ### Environment variables
 
@@ -70,6 +70,6 @@ Reference for building and deploying Base Mini Apps (Farcaster-compatible) on Ve
 
 - [ ] No `.env` or `.env.local` committed (root and app `.gitignore` exclude them).
 - [ ] `npm run build` and `npm run lint` pass in the app you’re deploying (e.g. `basestrike`).
-- [ ] Manifest available at `/.well-known/farcaster.json` (or rewrite to `/api/manifest`).
+- [ ] Manifest available at `/.well-known/farcaster.json`.
 - [ ] Production env on Vercel: `NODE_ENV=production`, `DEV_AUTH_BYPASS=false`, and all required vars set.
 - [ ] Default branch is `main` (or match Vercel production branch).

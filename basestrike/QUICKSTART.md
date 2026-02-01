@@ -73,7 +73,7 @@ You should see:
 ### 2. Manifest
 
 ```bash
-curl http://localhost:3000/api/manifest | jq
+curl http://localhost:3000/.well-known/farcaster.json | jq
 ```
 
 Should return valid Mini App manifest.
@@ -220,7 +220,7 @@ npm run test:e2e
 ### Manifest not accessible
 
 - Check server is running
-- Verify URL: http://localhost:3000/api/manifest
+- Verify URL: http://localhost:3000/.well-known/farcaster.json
 - Check for errors in console
 - Verify env vars loaded
 
@@ -282,7 +282,7 @@ npm run format       # Format code
 ### Important URLs
 
 - **Local**: http://localhost:3000
-- **Manifest**: http://localhost:3000/api/manifest
+- **Manifest**: http://localhost:3000/.well-known/farcaster.json
 - **API Docs**: See README.md
 - **Base Docs**: https://docs.base.org/building-with-base/mini-apps
 

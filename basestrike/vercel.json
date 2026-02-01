@@ -2,12 +2,6 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "rewrites": [
-    {
-      "source": "/.well-known/farcaster.json",
-      "destination": "/api/manifest"
-    }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",

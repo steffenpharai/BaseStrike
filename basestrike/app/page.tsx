@@ -17,12 +17,12 @@ export default function Home() {
   const [matchId] = useState(() => `match_${Date.now()}`);
   const [activeTab, setActiveTab] = useState<"play" | "ranked" | "profile">("play");
 
-  // Base Build preview: hide splash and display app (https://docs.base.org/mini-apps/quickstart/migrate-existing-apps)
+  // Base Build: call ready() in useEffect so host hides splash (migrate-existing-apps Step 2)
   useEffect(() => {
-    sdk.actions.ready();
+    sdk.actions.ready({ disableNativeGestures: true });
   }, []);
   useEffect(() => {
-    if (!isMiniAppReady) setMiniAppReady();
+    if (!isMiniAppReady) setMiniAppReady({ disableNativeGestures: true });
   }, [setMiniAppReady, isMiniAppReady]);
 
   const handleAction = (action: unknown) => console.log("Game action:", action);

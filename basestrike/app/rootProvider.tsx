@@ -1,22 +1,19 @@
 "use client";
-import { ReactNode, useEffect, useLayoutEffect } from "react";
+import { ReactNode, useEffect } from "react";
 import { base } from "wagmi/chains";
 import { OnchainKitProvider } from "@coinbase/onchainkit";
 import { sdk } from "@farcaster/miniapp-sdk";
 import "@coinbase/onchainkit/styles.css";
 
-// Base Build preview: sdk.actions.ready() hides splash and displays app.
-// https://docs.base.org/mini-apps/quickstart/migrate-existing-apps — "Call ready() as soon as possible"
-if (typeof window !== "undefined") {
-  void sdk.actions.ready();
-}
+// Base Build docs: https://docs.base.org/mini-apps/quickstart/migrate-existing-apps
+// "Once your app has loaded, call sdk.actions.ready() to hide the loading splash screen and display your app."
+// "In React apps, call ready() inside a useEffect hook to prevent it from running on every re-render. Call ready() as soon as possible."
+// Joystick/drag: https://docs.base.org/mini-apps/troubleshooting/common-issues — disableNativeGestures: true
+const READY_OPTIONS = { disableNativeGestures: true as const };
 
 export function RootProvider({ children }: { children: ReactNode }) {
-  useLayoutEffect(() => {
-    void sdk.actions.ready();
-  }, []);
   useEffect(() => {
-    void sdk.actions.ready();
+    sdk.actions.ready(READY_OPTIONS);
   }, []);
 
   return (

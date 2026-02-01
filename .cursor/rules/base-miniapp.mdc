@@ -10,7 +10,7 @@ Apply when editing **basestrike** (Base/Farcaster Mini App).
 
 ## Manifest
 
-- Served at `/.well-known/farcaster.json`; Vercel may rewrite to `/api/manifest` — ensure both or the rewrite target exists.
+- Served at `/.well-known/farcaster.json` (route: `app/.well-known/farcaster.json/route.ts`).
 - Use `minikit.config.ts` (or equivalent) with: `accountAssociation` (header, payload, signature from env), `miniapp.version` "1", `miniapp.name` ≤32 chars, `homeUrl`, `webhookUrl`, `primaryCategory`, `tags` (max 5).
 - Set `noindex: true` when `NODE_ENV !== "production"`.
 - Refs: https://docs.base.org/building-with-base/mini-apps/manifest

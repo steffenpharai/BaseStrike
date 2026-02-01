@@ -18,7 +18,7 @@ When working on **basestrike** (or base-mini-app when relevant), treat this chec
 
 ## Base Mini App Contract
 
-- [ ] Manifest served at `/.well-known/farcaster.json` (and `/api/manifest` if vercel rewrites point there).
+- [ ] Manifest served at `/.well-known/farcaster.json`.
 - [ ] `minikit.config.ts` / manifest: accountAssociation (env), homeUrl, webhookUrl, primaryCategory, tags; noindex when not production.
 - [ ] `/api/auth`: verifies Quick Auth JWT; domain from `MINIAPP_DOMAIN`; session token (e.g. HS256); `DEV_AUTH_BYPASS` only when `NODE_ENV` is development.
 - [ ] `/api/webhook`: responds within 3s; verifies signature (Neynar); handles miniapp_added/miniapp_removed; heavy work async.

@@ -7,7 +7,7 @@ test.describe("Home", () => {
   });
 
   test("manifest is reachable", async ({ request }) => {
-    const res = await request.get("/api/manifest");
+    const res = await request.get("/.well-known/farcaster.json");
     expect(res.ok()).toBe(true);
     const body = await res.json();
     expect(body).toHaveProperty("miniapp");

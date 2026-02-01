@@ -8,7 +8,7 @@ This is a **production-grade**, **complete**, **tested** Base Mini App implement
 
 **Files:**
 - `apps/web/lib/minikit.config.ts` - Manifest generator
-- `apps/web/app/api/manifest/route.ts` - Serves at `/.well-known/farcaster.json`
+- `app/.well-known/farcaster.json/route.ts` - Serves manifest at `/.well-known/farcaster.json`
 - `apps/web/public/.well-known/farcaster.json` - Public path (rewrites to API)
 
 **Features:**

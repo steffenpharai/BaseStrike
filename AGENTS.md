@@ -24,7 +24,7 @@
    - E2E tests exist for critical paths (home, manifest, auth, game/replay if present); add `npm run test:e2e` and run it (use Playwright or similar).
 
 2. **Base Mini App contract**
-   - Manifest served at `/.well-known/farcaster.json` and (if used) `/api/manifest`; `vercel.json` rewrites correct.
+   - Manifest served at `/.well-known/farcaster.json`.
    - Quick Auth: `/api/auth` verifies JWT; domain matches `MINIAPP_DOMAIN`; `DEV_AUTH_BYPASS` only in development.
    - Webhook: `/api/webhook` responds < 3s, verifies signature (Neynar), handles `miniapp_added` / `miniapp_removed`; no heavy work in request path.
    - Env: `.env.example` documents all vars; no secrets in code; production uses `NODE_ENV=production`, `DEV_AUTH_BYPASS=false`, unique `SESSION_SECRET`.
