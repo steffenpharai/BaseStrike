@@ -1,11 +1,16 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { sdk } from "@farcaster/miniapp-sdk";
+import { sdk, quickAuth } from "@farcaster/miniapp-sdk";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { Wallet } from "@coinbase/onchainkit/wallet";
 import { BaseRiftLogo } from "@/components/BaseRiftLogo";
+
+const BETA_CAP = 100;
+
+type BetaStatus = { count: number; full: boolean; cap: number } | null;
+type BetaSignupState = "idle" | "loading" | "joined" | "already" | "full" | "error";
 
 const GameContainer = dynamic(
   () => import("@/components/GameContainer").then(mod => ({ default: mod.GameContainer })),
@@ -24,6 +29,8 @@ export default function Home() {
   const [playerId] = useState(() => `player_${Math.random().toString(36).substr(2, 9)}`);
   const [matchId] = useState(() => `match_${Date.now()}`);
   const [activeTab, setActiveTab] = useState<"play" | "ranked" | "profile">("play");
+  const [betaStatus, setBetaStatus] = useState<BetaStatus>(null);
+  const [betaSignupState, setBetaSignupState] = useState<BetaSignupState>("idle");
 
   // Base Build: call ready() in useEffect so host hides splash (migrate-existing-apps Step 2)
   useEffect(() => {
@@ -34,6 +41,48 @@ export default function Home() {
   }, [setMiniAppReady, isMiniAppReady]);
 
   const handleAction = (action: unknown) => console.log("Game action:", action);
+
+  const fetchBetaStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/beta-signup");
+      if (res.ok) {
+        const data = await res.json();
+        setBetaStatus({ count: data.count, full: data.full, cap: data.cap ?? BETA_CAP });
+      }
+    } catch {
+      setBetaStatus(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "profile" || activeTab === "play") fetchBetaStatus();
+  }, [activeTab, fetchBetaStatus]);
+
+  const joinBeta = useCallback(async () => {
+    setBetaSignupState("loading");
+    try {
+      const token = await quickAuth.getToken();
+      const res = await fetch("/api/beta-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const data = await res.json();
+      if (res.ok && data.added) {
+        setBetaSignupState("joined");
+        setBetaStatus((prev) => (prev ? { ...prev, count: prev.count + 1 } : { count: 1, full: false, cap: BETA_CAP }));
+      } else if (res.ok && data.alreadySignedUp) {
+        setBetaSignupState("already");
+      } else if (res.status === 409 || data.full) {
+        setBetaSignupState("full");
+        fetchBetaStatus();
+      } else {
+        setBetaSignupState("error");
+      }
+    } catch {
+      setBetaSignupState("error");
+    }
+  }, [fetchBetaStatus]);
 
   const user = context?.user;
   const displayName = userDisplayName(user?.displayName, user?.username);
@@ -78,14 +127,36 @@ export default function Home() {
         <div className="flex-1 min-h-0 min-w-0 w-full flex flex-col">
         {activeTab === "play" && (
           <div className="flex-1 min-h-0 flex flex-col gap-2">
-            {/* Onboarding built into Play: purpose + how to get started (Building for the Base App). */}
-            <section className="flex-shrink-0 rounded-lg bg-gray-800/80 px-3 py-2" aria-label="How to play">
-              <p className="text-xs text-gray-300 text-center leading-relaxed">
-                Top-down tactical shooter on Base. Move, aim, shoot—climb the ranks.
-              </p>
-              <p className="text-xs text-gray-400 text-center mt-1">
-                Joystick: move · Tap: shoot
-              </p>
+            {/* Play hero: viral, game-like strip (Building for the Base App — simple, shareable, low friction). */}
+            <section
+              className="flex-shrink-0 rounded-xl bg-gray-800/90 px-3 py-3 border border-gray-600/80 play-hero-entrance relative overflow-hidden"
+              aria-label="How to play"
+            >
+              {/* Subtle top-edge glow */}
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent play-hero-glow pointer-events-none" aria-hidden />
+              <div className="relative flex flex-col gap-2">
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 text-[10px] font-bold uppercase tracking-wider border border-blue-400/30">
+                    Beta
+                  </span>
+                  {betaStatus != null && !betaStatus.full && (
+                    <span className="play-hero-spots-pulse text-[10px] text-gray-400 font-medium" aria-live="polite">
+                      {betaStatus.count}/{betaStatus.cap} testers
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm font-semibold text-white text-center leading-snug">
+                  Tactical shooter on Base. Move, aim, shoot—climb the ranks.
+                </p>
+                <p className="text-xs text-gray-400 text-center">
+                  Joystick: move · Tap: shoot
+                </p>
+                {betaStatus != null && !betaStatus.full && (
+                  <p className="text-[10px] text-gray-500 text-center">
+                    First 100 get early access · Join in Profile
+                  </p>
+                )}
+              </div>
             </section>
 
             {/* Game Canvas — fills remaining viewport on all mobile devices. */}
@@ -107,7 +178,7 @@ export default function Home() {
         )}
 
         {activeTab === "profile" && (
-          <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-4 bg-gray-800 rounded-xl">
+          <div className="flex-1 min-h-0 overflow-auto flex flex-col items-center p-4 bg-gray-800 rounded-xl">
             {/* Product: show avatar + username (no 0x addresses). */}
             {user ? (
               <>
@@ -128,13 +199,53 @@ export default function Home() {
                   </span>
                 )}
                 <h2 className="text-lg font-bold text-white">{displayName}</h2>
-                <p className="text-sm text-gray-400 mt-1">Stats and match history coming soon</p>
+                <p className="text-sm text-gray-400 mt-1 mb-4">Stats and match history coming soon</p>
+
+                {/* Beta tester signup — cap 100; low friction (Base building guidelines). */}
+                <section className="w-full max-w-sm rounded-xl bg-gray-700/80 px-4 py-3 border border-gray-600" aria-label="Join beta">
+                  <h3 className="text-sm font-semibold text-white mb-1">Help us test</h3>
+                  <p className="text-xs text-gray-400 mb-3">
+                    Join the beta list (max {betaStatus?.cap ?? BETA_CAP} testers). We’ll reach out before launch.
+                  </p>
+                  {betaStatus && (
+                    <p className="text-xs text-gray-500 mb-3" aria-live="polite">
+                      {betaStatus.count}/{betaStatus.cap} spots
+                    </p>
+                  )}
+                  {betaSignupState === "joined" || betaSignupState === "already" ? (
+                    <p className="text-sm text-green-400 font-medium min-h-[44px] flex items-center justify-center touch-target">
+                      You’re on the list
+                    </p>
+                  ) : betaStatus?.full ? (
+                    <p className="text-sm text-gray-400 min-h-[44px] flex items-center justify-center touch-target">
+                      Beta list is full
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={joinBeta}
+                      disabled={betaSignupState === "loading"}
+                      className="w-full min-h-[44px] bg-blue-600 active:bg-blue-800 disabled:opacity-60 text-white font-semibold rounded-xl transition-colors touch-target"
+                    >
+                      {betaSignupState === "loading" ? "Joining…" : betaSignupState === "error" ? "Try again" : "Join the beta"}
+                    </button>
+                  )}
+                  {betaSignupState === "error" && (
+                    <p className="text-xs text-red-400 mt-2 text-center">Something went wrong. Sign in in the Base app and try again.</p>
+                  )}
+                </section>
               </>
             ) : (
               <>
                 <div className="text-4xl mb-2" aria-hidden>👤</div>
                 <h2 className="text-lg font-bold mb-1">Profile</h2>
-                <p className="text-sm text-gray-400">Sign in to see your stats and match history</p>
+                <p className="text-sm text-gray-400 mb-4">Sign in to see your stats and match history</p>
+                <section className="w-full max-w-sm rounded-xl bg-gray-700/80 px-4 py-3 border border-gray-600" aria-label="Join beta">
+                  <h3 className="text-sm font-semibold text-white mb-1">Help us test</h3>
+                  <p className="text-xs text-gray-400">
+                    Sign in to join the beta tester list (max {BETA_CAP} people). We’ll reach out before launch.
+                  </p>
+                </section>
               </>
             )}
           </div>

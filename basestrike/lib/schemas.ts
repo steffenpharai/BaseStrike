@@ -25,3 +25,10 @@ export const WebhookEventSchema = z.object({
     notificationUrl: z.string().url().optional(),
   }),
 });
+
+/**
+ * Beta signup: client sends Quick Auth token; server verifies and adds by fid.
+ */
+export const BetaSignupTokenSchema = z.object({
+  token: z.string().min(1, "Token is required"),
+});

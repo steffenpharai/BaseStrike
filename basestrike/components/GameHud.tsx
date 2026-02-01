@@ -26,16 +26,6 @@ export function GameHud({ state, visible }: GameHudProps) {
 
   return (
     <>
-      {/* Crosshair — center, subtle */}
-      <div
-        className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
-        aria-hidden
-      >
-        <div className="h-px w-4 bg-white/60" />
-        <div className="absolute left-1/2 top-0 -translate-x-1/2 h-4 w-px bg-white/60" />
-        <div className="absolute left-1/2 top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/80" />
-      </div>
-
       {/* Top left — round, phase, team counts */}
       <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-col gap-1.5">
         <div className="rounded-lg bg-black/50 px-3 py-1.5 backdrop-blur-sm">

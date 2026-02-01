@@ -51,6 +51,40 @@
   animation: baserift-logo-pulse-keyframes 3s var(--ease-base) infinite;
 }
 
+/* Play hero: game-style entrance + subtle energy (industry-standard ~200–400ms, intention-first). */
+@keyframes play-hero-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes play-hero-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes play-hero-spots-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+.play-hero-entrance {
+  animation: play-hero-entrance var(--duration-intro) var(--ease-base) both;
+}
+
+.play-hero-glow {
+  animation: play-hero-glow 2.5s var(--ease-base) infinite;
+}
+
+.play-hero-spots-pulse {
+  animation: play-hero-spots-pulse 2s var(--ease-base) infinite;
+}
+
 /* Touch targets: minimum 44px (Base design guidelines – mobile-first). */
 .touch-target {
   min-height: 44px;
