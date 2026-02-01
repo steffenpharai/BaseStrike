@@ -83,13 +83,23 @@ vercel login
 # Link project (from basestrike directory)
 cd basestrike
 vercel link
-
-# Root directory in Vercel:
-# - If the Git repo root IS the basestrike app (e.g. steffenpharai/basestrike with package.json at repo root),
-#   leave "Root Directory" empty.
-# - If the Git repo is the full workspace (base-mini-app, basestrike, docs at top level), set "Root Directory"
-#   to basestrike so install/build run from that folder.
 ```
+
+**Critical — Root Directory (monorepo):**  
+If the Git repo is the full workspace (e.g. `base-mini-app`, `basestrike`, `docs` at top level), the Vercel build will fail unless the project Root Directory is set.
+
+1. In Vercel: **Project basestrike** → **Settings** → **General** → **Root Directory**.
+2. Set to **`basestrike`** (no leading slash). Save.
+3. Trigger a new deployment (push a commit or **Redeploy** in the dashboard).
+
+Optional: set via API (requires [Vercel token](https://vercel.com/account/tokens)):
+
+```bash
+export VERCEL_TOKEN="your-token"
+./scripts/set-vercel-root.sh
+```
+
+If the repo contains only the basestrike app (package.json at repo root), leave Root Directory **empty**.
 
 ### 3.2 Configure Environment Variables
 
