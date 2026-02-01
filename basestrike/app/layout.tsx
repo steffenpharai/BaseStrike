@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "BaseRift",
   description: "Top-down tactical shooter with multiplayer and replays",
   other: {
-    "base:app_id": "697eea9d2aafa0bc9ad8a3b6",
+    "base:app_id": "697fd1b02aafa0bc9ad8a4c2",
     "fc:miniapp": JSON.stringify({
       version: "next",
       imageUrl: `${BASE_URL}/hero.png`,
