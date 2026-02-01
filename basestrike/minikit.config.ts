@@ -29,6 +29,8 @@ export const minikitConfig = {
     description: "Top-down tactical shooter with multiplayer and replays",
     screenshotUrls: [`${ROOT_URL}/screenshot.png`],
     iconUrl: `${ROOT_URL}/icon.png`,
+    /** Used by Base app for embed/preview; same as hero for consistency. */
+    imageUrl: `${ROOT_URL}/hero.png`,
     splashImageUrl: `${ROOT_URL}/splash.png`,
     splashBackgroundColor: "#1a1a1a",
     homeUrl: ROOT_URL,
