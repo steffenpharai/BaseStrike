@@ -51,11 +51,12 @@ export class GameScene extends Phaser.Scene {
     this.touchControls = new TouchControls(this);
     this.touchControls.create();
 
-    // Setup mouse/touch for shooting (right half of screen on mobile)
+    // Setup mouse/touch for shooting (right half of screen for touch only)
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
-      // On touch devices, only shoot if tap is on right half of screen
-      if (this.sys.game.device.input.touch && pointer.x < this.cameras.main.width / 2) {
-        return; // Left half is for joystick
+      // Only reserve left half for joystick when this specific pointer is touch (not mouse/pen)
+      const isTouch = "pointerType" in pointer.event && pointer.event.pointerType === "touch";
+      if (isTouch && pointer.x < this.cameras.main.width / 2) {
+        return; // Left half is for joystick on touch devices
       }
       this.handleShoot(pointer);
     });
