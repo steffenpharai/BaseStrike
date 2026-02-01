@@ -25,8 +25,8 @@ cd packages/contracts
 forge install OpenZeppelin/openzeppelin-contracts --no-commit
 cd ../..
 
-# Set up env
-cp apps/web/.env.example apps/web/.env.local
+# Set up env (from basestrike directory)
+cp .env.example .env.local
 
 # Edit .env.local with dev settings
 # MINIAPP_DOMAIN=localhost:3000
@@ -80,11 +80,15 @@ npm i -g vercel
 # Login
 vercel login
 
-# Link project
-cd apps/web
+# Link project (from basestrike directory)
+cd basestrike
 vercel link
 
-# Set root directory to "apps/web" in Vercel dashboard
+# Root directory in Vercel:
+# - If the Git repo root IS the basestrike app (e.g. steffenpharai/basestrike with package.json at repo root),
+#   leave "Root Directory" empty.
+# - If the Git repo is the full workspace (base-mini-app, basestrike, docs at top level), set "Root Directory"
+#   to basestrike so install/build run from that folder.
 ```
 
 ### 3.2 Configure Environment Variables
@@ -334,6 +338,21 @@ git push origin main
 ```
 
 ## Troubleshooting
+
+### 404 on every page (Git import)
+
+If you imported **steffenpharai/basestrike** (or similar) from Git and the deployment returns 404:
+
+1. **Root Directory**
+   - In Vercel: Project → Settings → General → **Root Directory**.
+   - If the repo contains only the basestrike app (e.g. `package.json` at repo root), leave Root Directory **empty**.
+   - If the repo is the full workspace (folders like `base-mini-app`, `basestrike`, `docs` at top level), set Root Directory to **`basestrike`** (no leading slash). Save and redeploy.
+
+2. **Framework**
+   - Do not set Framework to "Other" or override with `framework: null` in `vercel.json`. Let Vercel detect **Next.js** so the correct build and output are used.
+
+3. **Redeploy**
+   - After changing Root Directory or settings, trigger a new deployment (e.g. push a commit or use "Redeploy" in the Vercel dashboard).
 
 ### Manifest not loading
 
