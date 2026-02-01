@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { Wallet } from "@coinbase/onchainkit/wallet";
-import { sdk } from "@farcaster/miniapp-sdk";
 import { BaseRiftLogo } from "@/components/BaseRiftLogo";
 
 const GameContainer = dynamic(
@@ -18,7 +17,6 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"play" | "ranked" | "profile">("play");
 
   useEffect(() => {
-    void sdk.actions.ready();
     if (!isMiniAppReady) setMiniAppReady();
   }, [setMiniAppReady, isMiniAppReady]);
 

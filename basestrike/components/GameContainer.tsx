@@ -62,7 +62,7 @@ export function GameContainer({ playerId, matchId: _matchId, onAction }: GameCon
         gameRef.current = null;
       }
     };
-  }, [mounted, gameSize?.width, gameSize?.height, playerId, onAction]);
+  }, [mounted, gameSize, playerId, onAction]);
 
   if (!mounted) {
     return (
