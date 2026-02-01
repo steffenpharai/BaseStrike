@@ -10,7 +10,6 @@ const ROOT_URL =
   (process.env.VERCEL_URL ? CANONICAL_APP_URL : "http://localhost:3000");
 
 // accountAssociation: only include when all three env vars are set (from Base Build Account association tool).
-// Do not use placeholder/dummy values – Base Build shows "dummyaccount" otherwise.
 const header = process.env.ACCOUNT_ASSOCIATION_HEADER ?? "";
 const payload = process.env.ACCOUNT_ASSOCIATION_PAYLOAD ?? "";
 const signature = process.env.ACCOUNT_ASSOCIATION_SIGNATURE ?? "";

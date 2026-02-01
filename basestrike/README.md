@@ -488,7 +488,7 @@ forge coverage
 |---------|-------------|------------|
 | Domain | localhost:3000 | baserift.app |
 | HTTPS | Not required | Required |
-| accountAssociation | Placeholder | Generated via Base Build |
+| accountAssociation | From Base Build | Generated via Base Build |
 | Auth | Mock tokens allowed | Real JWT only |
 | Notifications | Optional | Required |
 | Storage | In-memory | Database |
