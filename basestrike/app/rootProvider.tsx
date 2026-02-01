@@ -5,17 +5,16 @@ import { OnchainKitProvider } from "@coinbase/onchainkit";
 import { sdk } from "@farcaster/miniapp-sdk";
 import "@coinbase/onchainkit/styles.css";
 
-// Signal ready as soon as this module loads (before React mount) so base.dev / host gets it early.
+// Base Build preview: sdk.actions.ready() hides splash and displays app.
+// https://docs.base.org/mini-apps/quickstart/migrate-existing-apps — "Call ready() as soon as possible"
 if (typeof window !== "undefined") {
   void sdk.actions.ready();
 }
 
 export function RootProvider({ children }: { children: ReactNode }) {
-  // Sync after commit so host gets ready before paint if module load was too early.
   useLayoutEffect(() => {
     void sdk.actions.ready();
   }, []);
-  // After first paint (per Base docs); ensures host sees ready even if it only listens after load.
   useEffect(() => {
     void sdk.actions.ready();
   }, []);

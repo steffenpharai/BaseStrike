@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { sdk } from "@farcaster/miniapp-sdk";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { Wallet } from "@coinbase/onchainkit/wallet";
 import { BaseRiftLogo } from "@/components/BaseRiftLogo";
@@ -16,6 +17,10 @@ export default function Home() {
   const [matchId] = useState(() => `match_${Date.now()}`);
   const [activeTab, setActiveTab] = useState<"play" | "ranked" | "profile">("play");
 
+  // Base Build preview: hide splash and display app (https://docs.base.org/mini-apps/quickstart/migrate-existing-apps)
+  useEffect(() => {
+    sdk.actions.ready();
+  }, []);
   useEffect(() => {
     if (!isMiniAppReady) setMiniAppReady();
   }, [setMiniAppReady, isMiniAppReady]);
