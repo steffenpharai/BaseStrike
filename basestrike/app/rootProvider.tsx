@@ -1,13 +1,13 @@
 "use client";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useLayoutEffect } from "react";
 import { base } from "wagmi/chains";
 import { OnchainKitProvider } from "@coinbase/onchainkit";
 import { sdk } from "@farcaster/miniapp-sdk";
 import "@coinbase/onchainkit/styles.css";
 
 export function RootProvider({ children }: { children: ReactNode }) {
-  useEffect(() => {
-    sdk.actions.ready();
+  useLayoutEffect(() => {
+    void sdk.actions.ready();
   }, []);
 
   return (

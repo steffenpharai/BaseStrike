@@ -17,6 +17,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"play" | "ranked" | "profile">("play");
 
   useEffect(() => {
+    void sdk.actions.ready();
     if (!isMiniAppReady) setMiniAppReady();
   }, [setMiniAppReady, isMiniAppReady]);
 
