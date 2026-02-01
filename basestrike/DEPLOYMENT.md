@@ -98,19 +98,19 @@ In Vercel dashboard or via CLI:
 ```bash
 # Domain (use your Vercel domain or custom domain)
 vercel env add MINIAPP_DOMAIN
-# Enter: your-app.vercel.app
+# Enter: baserift.vercel.app
 
 vercel env add MINIAPP_HOME_URL
-# Enter: https://your-app.vercel.app
+# Enter: https://baserift.vercel.app
 
 vercel env add MINIAPP_ICON_URL
-# Enter: https://your-app.vercel.app/icon.png
+# Enter: https://baserift.vercel.app/icon.png
 
 vercel env add MINIAPP_SPLASH_URL
-# Enter: https://your-app.vercel.app/splash.png
+# Enter: https://baserift.vercel.app/splash.png
 
 vercel env add MINIAPP_WEBHOOK_URL
-# Enter: https://your-app.vercel.app/api/webhook
+# Enter: https://baserift.vercel.app/api/webhook
 
 # Neynar API Key
 vercel env add NEYNAR_API_KEY
@@ -165,7 +165,7 @@ vercel --prod
 3. Click "Register App"
 4. Enter app details:
    - Name: BaseRift
-   - Domain: your-app.vercel.app
+   - Domain: baserift.vercel.app
    - Description: Tactical shooter mini app
 5. Follow signing flow in wallet
 6. Copy generated values:
@@ -197,7 +197,7 @@ vercel --prod
 ### 5.1 Check Manifest
 
 ```bash
-curl https://your-app.vercel.app/.well-known/farcaster.json | jq
+curl https://baserift.vercel.app/.well-known/farcaster.json | jq
 ```
 
 Should return valid manifest with all fields.
@@ -206,17 +206,17 @@ Should return valid manifest with all fields.
 
 ```bash
 # Manifest
-curl https://your-app.vercel.app/api/manifest
+curl https://baserift.vercel.app/api/manifest
 
 # Auth (with dev token)
-curl -X POST https://your-app.vercel.app/api/auth \
+curl -X POST https://baserift.vercel.app/api/auth \
   -H "Content-Type: application/json" \
   -d '{"token":"dev:123:test"}'
 ```
 
 ### 5.3 Test in Browser
 
-1. Open https://your-app.vercel.app
+1. Open https://baserift.vercel.app
 2. Verify page loads
 3. Check for errors in console
 4. Test game renders
@@ -224,7 +224,7 @@ curl -X POST https://your-app.vercel.app/api/auth \
 ## Step 6: Test in Base Dev Preview
 
 1. Go to https://base.dev/preview
-2. Enter your app URL: https://your-app.vercel.app
+2. Enter your app URL: https://baserift.vercel.app
 3. Verify manifest loads
 4. Test context detection
 5. Test all features
@@ -236,7 +236,7 @@ curl -X POST https://your-app.vercel.app/api/auth \
 Use Neynar CLI or create test webhook:
 
 ```bash
-curl -X POST https://your-app.vercel.app/api/webhook \
+curl -X POST https://baserift.vercel.app/api/webhook \
   -H "Content-Type: application/json" \
   -H "x-farcaster-signature: test-signature" \
   -d '{
@@ -263,7 +263,7 @@ Verify webhook processed successfully.
 
 ```bash
 # Set test environment
-export BASE_URL=https://your-app.vercel.app
+export BASE_URL=https://baserift.vercel.app
 
 # Run E2E tests
 npm run test:e2e
