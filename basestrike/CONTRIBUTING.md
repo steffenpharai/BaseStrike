@@ -1,6 +1,6 @@
-# Contributing to BaseStrike
+# Contributing to BaseRift
 
-Thank you for your interest in contributing to BaseStrike!
+Thank you for your interest in contributing to BaseRift!
 
 ## Development Setup
 

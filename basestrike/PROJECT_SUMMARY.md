@@ -1,4 +1,4 @@
-# BaseStrike - Project Summary
+# BaseRift - Project Summary
 
 ## Deliverables Completed ✅
 
@@ -187,8 +187,8 @@ This is a **production-grade**, **complete**, **tested** Base Mini App implement
 ### 9. Onchain / Contracts ✅
 
 **Files:**
-- `packages/contracts/src/BaseStrikeCosmetics.sol` - ERC-1155 contract
-- `packages/contracts/test/BaseStrikeCosmetics.t.sol` - Foundry tests
+- `packages/contracts/src/BaseRiftCosmetics.sol` - ERC-1155 contract
+- `packages/contracts/test/BaseRiftCosmetics.t.sol` - Foundry tests
 - `packages/contracts/script/Deploy.s.sol` - Deployment script
 
 **Features:**
@@ -222,7 +222,7 @@ This is a **production-grade**, **complete**, **tested** Base Mini App implement
 - `apps/web/__tests__/replay.test.ts` - Replay storage tests
 
 **Contract Tests:**
-- `packages/contracts/test/BaseStrikeCosmetics.t.sol` - Full coverage
+- `packages/contracts/test/BaseRiftCosmetics.t.sol` - Full coverage
 
 **E2E Tests:**
 - `apps/web/e2e/home.spec.ts` - Home page loads
@@ -314,7 +314,7 @@ basestrike/
 │   │       ├── schemas.ts               # Zod validation
 │   │       └── constants.ts             # Game constants
 │   └── contracts/                       # Foundry contracts
-│       ├── src/BaseStrikeCosmetics.sol
+│       ├── src/BaseRiftCosmetics.sol
 │       ├── test/                        # Contract tests
 │       └── script/Deploy.s.sol          # Deployment
 └── .github/workflows/
@@ -459,4 +459,4 @@ A complete, production-grade Base Mini App that:
 4. **Customize**: Modify to your needs
 5. **Launch**: Submit to Base
 
-Enjoy building with BaseStrike! 🎮
+Enjoy building with BaseRift! 🎮

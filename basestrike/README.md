@@ -1,10 +1,10 @@
-# BaseStrike
+# BaseRift
 
 Production-grade Base Mini App: Top-down tactical shooter with multiplayer, replays, Base Pay integration, and onchain cosmetics.
 
 ## Overview
 
-BaseStrike is a complete implementation of a Base Mini App following all official guidelines and requirements. It demonstrates:
+BaseRift is a complete implementation of a Base Mini App following all official guidelines and requirements. It demonstrates:
 
 - ✅ **Mini App Manifest** with proper accountAssociation
 - ✅ **Quick Auth** for secure authentication
@@ -153,7 +153,7 @@ The manifest is served at `/.well-known/farcaster.json` via the `/api/manifest` 
 
 **Reference:** https://docs.base.org/building-with-base/mini-apps/embeds
 
-BaseStrike implements embeds on:
+BaseRift implements embeds on:
 - Home page (`/`) with `fc:miniapp` meta tag
 - Replay pages (`/replay/[id]`) with full Frame metadata
 
@@ -168,7 +168,7 @@ BaseStrike implements embeds on:
 
 **Reference:** https://docs.base.org/building-with-base/mini-apps/context
 
-BaseStrike uses `@farcaster/miniapp-sdk` to:
+BaseRift uses `@farcaster/miniapp-sdk` to:
 - Detect if running in mini app via `sdk.isInMiniApp()`
 - Load user context via `sdk.context()`
 - Display user's displayName and pfp
@@ -204,7 +204,7 @@ const result = await verifyJwt({ token, domain });
 
 **Reference:** https://docs.base.org/building-with-base/mini-apps/payments
 
-BaseStrike uses Base Pay for ranked match entry fees.
+BaseRift uses Base Pay for ranked match entry fees.
 
 **Client-side:**
 ```typescript
@@ -308,9 +308,9 @@ const result = await pay({ amount, recipient });
 
 ## Smart Contracts
 
-### BaseStrikeCosmetics (ERC-1155)
+### BaseRiftCosmetics (ERC-1155)
 
-**Location:** `packages/contracts/src/BaseStrikeCosmetics.sol`
+**Location:** `packages/contracts/src/BaseRiftCosmetics.sol`
 
 **Features:**
 - Mint cosmetics (skins, badges)
@@ -326,7 +326,7 @@ cd packages/contracts
 # Set environment variables
 export DEPLOYER_PRIVATE_KEY=<your-key>
 export MINTER_ADDRESS=<backend-signer-address>
-export METADATA_BASE_URI=https://basestrike.app/metadata/
+export METADATA_BASE_URI=https://baserift.app/metadata/
 
 # Deploy to Base Sepolia
 npm run contracts:deploy
@@ -353,11 +353,11 @@ forge coverage
 
 2. **Environment variables:**
    ```bash
-   MINIAPP_DOMAIN=basestrike.app
-   MINIAPP_HOME_URL=https://basestrike.app
-   MINIAPP_ICON_URL=https://basestrike.app/icon.png
-   MINIAPP_SPLASH_URL=https://basestrike.app/splash.png
-   MINIAPP_WEBHOOK_URL=https://basestrike.app/api/webhook
+   MINIAPP_DOMAIN=baserift.app
+   MINIAPP_HOME_URL=https://baserift.app
+   MINIAPP_ICON_URL=https://baserift.app/icon.png
+   MINIAPP_SPLASH_URL=https://baserift.app/splash.png
+   MINIAPP_WEBHOOK_URL=https://baserift.app/api/webhook
 
    ACCOUNT_ASSOCIATION_HEADER=<from Base Build>
    ACCOUNT_ASSOCIATION_PAYLOAD=<from Base Build>
@@ -384,8 +384,8 @@ forge coverage
 
 4. **Verify:**
    ```bash
-   curl https://basestrike.app/.well-known/farcaster.json
-   curl https://basestrike.app/api/manifest
+   curl https://baserift.app/.well-known/farcaster.json
+   curl https://baserift.app/api/manifest
    ```
 
 ### Post-Deployment
@@ -398,7 +398,7 @@ forge coverage
 
 2. **Test in Base app:**
    - Install Base app (iOS/Android)
-   - Add BaseStrike mini app
+   - Add BaseRift mini app
    - Verify context loads
    - Test authentication
    - Check notifications
@@ -486,7 +486,7 @@ forge coverage
 
 | Feature | Development | Production |
 |---------|-------------|------------|
-| Domain | localhost:3000 | basestrike.app |
+| Domain | localhost:3000 | baserift.app |
 | HTTPS | Not required | Required |
 | accountAssociation | Placeholder | Generated via Base Build |
 | Auth | Mock tokens allowed | Real JWT only |
@@ -584,4 +584,4 @@ MIT
 For issues or questions:
 - GitHub Issues: [Create issue]
 - Base Discord: https://discord.gg/base
-- Farcaster: @basestrike
+- Farcaster: @baserift

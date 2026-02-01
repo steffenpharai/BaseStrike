@@ -1,6 +1,6 @@
 # Deployment Guide
 
-Complete step-by-step deployment guide for BaseStrike.
+Complete step-by-step deployment guide for BaseRift.
 
 ## Prerequisites
 
@@ -160,7 +160,7 @@ vercel --prod
 2. Sign in with wallet
 3. Click "Register App"
 4. Enter app details:
-   - Name: BaseStrike
+   - Name: BaseRift
    - Domain: your-app.vercel.app
    - Description: Tactical shooter mini app
 5. Follow signing flow in wallet

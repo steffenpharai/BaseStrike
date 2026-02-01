@@ -1,5 +1,5 @@
 /**
- * Configuration management for BaseStrike
+ * Configuration management for BaseRift
  * Validates required environment variables and provides typed config
  */
 

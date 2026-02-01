@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# BaseStrike - Local Development Quick Start
-# Run this script to get BaseStrike running locally
+# BaseRift - Local Development Quick Start
+# Run this script to get BaseRift running locally
 
 set -e
 
-echo "🎮 BaseStrike - Local Setup"
+echo "🎮 BaseRift - Local Setup"
 echo "=========================="
 echo ""
 

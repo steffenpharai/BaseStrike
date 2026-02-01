@@ -3,10 +3,10 @@
 import React from "react";
 
 /**
- * BaseStrike logo: tactical crosshair mark + wordmark.
+ * BaseRift logo: tactical crosshair mark + wordmark.
  * Follows Base design guidelines: semantic colors, Inter, contrast; Base motion: intention-first, cubic-bezier 0.4/0/0.2/1, snappy (120–240ms).
  */
-export function BaseStrikeLogo({
+export function BaseRiftLogo({
   variant = "full",
   className = "",
   animated = true,
@@ -15,16 +15,16 @@ export function BaseStrikeLogo({
   className?: string;
   animated?: boolean;
 }) {
-  const motionClass = animated ? "basestrike-logo-entrance" : "";
+  const motionClass = animated ? "baserift-logo-entrance" : "";
 
   return (
     <div
       className={`inline-flex items-center gap-2 min-h-[44px] ${motionClass} ${className}`}
-      aria-label="BaseStrike"
+      aria-label="BaseRift"
     >
       {/* Tactical crosshair mark: circle + cross + center strike dot */}
       <svg
-        className="basestrike-logo-mark flex-shrink-0"
+        className="baserift-logo-mark flex-shrink-0"
         width={variant === "icon" ? 32 : 36}
         height={variant === "icon" ? 32 : 36}
         viewBox="0 0 40 40"
@@ -34,7 +34,7 @@ export function BaseStrikeLogo({
       >
         <defs>
           <linearGradient
-            id="basestrike-crosshair-glow"
+            id="baserift-crosshair-glow"
             x1="0%"
             y1="0%"
             x2="100%"
@@ -43,7 +43,7 @@ export function BaseStrikeLogo({
             <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="1" />
             <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0.6" />
           </linearGradient>
-          <filter id="basestrike-glow" x="-20%" y="-20%" width="140%" height="140%">
+          <filter id="baserift-glow" x="-20%" y="-20%" width="140%" height="140%">
             <feGaussianBlur stdDeviation="0.5" result="blur" />
             <feFlood floodColor="var(--color-primary)" floodOpacity="0.4" />
             <feComposite in2="blur" operator="in" />
@@ -110,18 +110,18 @@ export function BaseStrikeLogo({
           cx="20"
           cy="20"
           r="4"
-          fill="url(#basestrike-crosshair-glow)"
-          filter="url(#basestrike-glow)"
+          fill="url(#baserift-crosshair-glow)"
+          filter="url(#baserift-glow)"
         />
         <circle cx="20" cy="20" r="2.5" fill="var(--color-primary)" />
       </svg>
 
       {variant === "full" && (
         <span
-          className="font-bold text-[var(--color-foreground)] tracking-tight text-xl basestrike-logo-wordmark"
+          className="font-bold text-[var(--color-foreground)] tracking-tight text-xl baserift-logo-wordmark"
           style={{ fontFamily: "var(--font-sans)" }}
         >
-          BaseStrike
+          BaseRift
         </span>
       )}
     </div>

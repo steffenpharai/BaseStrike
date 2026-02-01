@@ -56,7 +56,7 @@ export async function sendWelcomeNotification(fid: number, appFid: number): Prom
   await sendNotification({
     fid,
     appFid,
-    title: "Welcome to BaseStrike!",
+    title: "Welcome to BaseRift!",
     body: "Get ready for tactical top-down shooter action. Jump into your first match!",
   });
 }

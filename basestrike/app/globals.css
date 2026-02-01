@@ -21,7 +21,7 @@
 }
 
 /* Logo entrance: subtle scale + opacity (Base motion — under 800ms, square-led choreography) */
-@keyframes basestrike-logo-entrance-keyframes {
+@keyframes baserift-logo-entrance-keyframes {
   from {
     opacity: 0;
     transform: scale(0.96) translateY(2px);
@@ -32,12 +32,12 @@
   }
 }
 
-.basestrike-logo-entrance {
-  animation: basestrike-logo-entrance-keyframes var(--duration-intro) var(--ease-base) both;
+.baserift-logo-entrance {
+  animation: baserift-logo-entrance-keyframes var(--duration-intro) var(--ease-base) both;
 }
 
-/* Optional idle: add .basestrike-logo-mark-idle for very subtle pulse (use sparingly) */
-@keyframes basestrike-logo-pulse-keyframes {
+/* Optional idle: add .baserift-logo-mark-idle for very subtle pulse (use sparingly) */
+@keyframes baserift-logo-pulse-keyframes {
   0%,
   100% {
     opacity: 1;
@@ -47,8 +47,8 @@
   }
 }
 
-.basestrike-logo-mark-idle {
-  animation: basestrike-logo-pulse-keyframes 3s var(--ease-base) infinite;
+.baserift-logo-mark-idle {
+  animation: baserift-logo-pulse-keyframes 3s var(--ease-base) infinite;
 }
 
 /* Touch targets: minimum 44px (Base design guidelines – mobile-first). */

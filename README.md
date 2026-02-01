@@ -1,6 +1,6 @@
 # Base
 
-- **basestrike/** – Base Mini App (Farcaster): tactical shooter. Deploy this to Vercel; set **Root Directory** to `basestrike`.
+- **basestrike/** – BaseRift: Base Mini App (Farcaster) tactical shooter. Deploy this to Vercel; set **Root Directory** to `basestrike`.
 - **base-mini-app/** – Simpler Mini App template (OnchainKit).
 
 See [AGENTS.md](AGENTS.md) for development and production checklist.  

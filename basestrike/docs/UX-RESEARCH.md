@@ -22,7 +22,7 @@
 | **Viewport** | Design for **small viewports** and **portrait orientation**. |
 | **Ergonomics** | **Optimize for thumb reach and one-handed use.** |
 
-**Basestrike alignment:** Play tab is default; game and primary action are in the first screen. Header is compact; main content is scrollable with bottom nav fixed.
+**BaseRift alignment:** Play tab is default; game and primary action are in the first screen. Header is compact; main content is scrollable with bottom nav fixed.
 
 ---
 
@@ -35,7 +35,7 @@
 | **Labels** | **Always include labels under icons** so each tab is clear. |
 | **Testing** | Test on multiple device sizes; ensure buttons are not cut off. |
 
-**Basestrike alignment:** Fixed bottom nav with Play / Ranked / Profile; labels under emoji icons; `safe-area-pb` for notched devices.
+**BaseRift alignment:** Fixed bottom nav with Play / Ranked / Profile; labels under emoji icons; `safe-area-pb` for notched devices.
 
 ---
 
@@ -65,7 +65,7 @@
 | **Contrast** | Sufficient contrast between text and background. |
 | **Weights** | Prefer **regular, bold, italic**; decorative/script only for accents. |
 
-**Basestrike alignment:** `--font-sans: "Inter", system-ui, sans-serif` in `globals.css`.
+**BaseRift alignment:** `--font-sans: "Inter", system-ui, sans-serif` in `globals.css`.
 
 ---
 
@@ -91,14 +91,14 @@
 | **Gestures** | Support tap, swipe, pinch where appropriate. |
 | **Hover** | **Do not rely on hover** — it doesn’t exist on touch. Prefer `:active` and clear tap feedback. |
 
-**Basestrike alignment:** Nav tabs use `min-h-[48px]`; primary buttons use `min-h-[48px]`. Game area uses `touch-action: none` and no hover-only controls. Ensure Wallet and any other tappable elements meet 44px.
+**BaseRift alignment:** Nav tabs use `min-h-[48px]`; primary buttons use `min-h-[48px]`. Game area uses `touch-action: none` and no hover-only controls. Ensure Wallet and any other tappable elements meet 44px.
 
 ---
 
 ## 8. Viewport & Meta
 
 - Use **viewport** meta: `width=device-width, initial-scale=1` (Next.js App Router adds this by default).
-- For notched devices, consider `viewport-fit=cover` and `env(safe-area-inset-*)` for padding (basestrike uses `safe-area-pb`).
+- For notched devices, consider `viewport-fit=cover` and `env(safe-area-inset-*)` for padding (baserift uses `safe-area-pb`).
 
 ---
 

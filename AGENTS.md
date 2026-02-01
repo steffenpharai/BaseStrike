@@ -1,4 +1,4 @@
-# Agent Instructions: BaseStrike Base Mini App
+# Agent Instructions: BaseRift Base Mini App
 
 **Mode:** Autonomous, YOLO. Do not stop until the app is production-ready.
 

@@ -1,6 +1,6 @@
 # Command Reference
 
-Quick reference for all BaseStrike commands.
+Quick reference for all BaseRift commands.
 
 ## Setup
 

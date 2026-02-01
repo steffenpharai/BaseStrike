@@ -1,6 +1,6 @@
-# BaseStrike Quickstart
+# BaseRift Quickstart
 
-Get BaseStrike running locally in 5 minutes.
+Get BaseRift running locally in 5 minutes.
 
 ## Prerequisites
 
@@ -66,7 +66,7 @@ npm run dev
 Open http://localhost:3000
 
 You should see:
-- BaseStrike title
+- BaseRift title
 - Practice Match section with game
 - Ranked Queue section
 
@@ -322,4 +322,4 @@ After getting it running:
 5. **Deploy**: Get it live on Vercel
 6. **Submit to Base**: Get approved and launch
 
-Enjoy building with BaseStrike!
+Enjoy building with BaseRift!

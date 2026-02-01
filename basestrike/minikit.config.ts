@@ -11,7 +11,7 @@ export const minikitConfig = {
   },
   miniapp: {
     version: "1",
-    name: "BaseStrike",
+    name: "BaseRift",
     subtitle: "Tactical 2D Shooter",
     description: "Top-down tactical shooter with multiplayer and replays",
     iconUrl: `${ROOT_URL}/icon.png`,

@@ -3,7 +3,7 @@ import { RootProvider } from "./rootProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "BaseStrike",
+  title: "BaseRift",
   description: "Top-down tactical shooter with multiplayer and replays",
 };
 

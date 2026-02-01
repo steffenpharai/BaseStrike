@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { Wallet } from "@coinbase/onchainkit/wallet";
-import { BaseStrikeLogo } from "@/components/BaseStrikeLogo";
+import { BaseRiftLogo } from "@/components/BaseRiftLogo";
 
 const GameContainer = dynamic(
   () => import("@/components/GameContainer").then(mod => ({ default: mod.GameContainer })),
@@ -28,7 +28,7 @@ export default function Home() {
       <header className="bg-gray-800/80 backdrop-blur-sm border-b border-gray-700 px-4 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <h1 className="flex items-center min-h-[44px]">
-            <BaseStrikeLogo variant="full" animated />
+            <BaseRiftLogo variant="full" animated />
           </h1>
           <div className="flex items-center gap-3">
             {context?.user && (

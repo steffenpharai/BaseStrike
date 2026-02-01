@@ -59,7 +59,7 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     env:
-      MINIAPP_DOMAIN: basestrike.app
+      MINIAPP_DOMAIN: baserift.app
       MINIAPP_HOME_URL: http://localhost:3000
       MINIAPP_ICON_URL: http://localhost:3000/icon.png
       DEV_AUTH_BYPASS: "true"

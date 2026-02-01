@@ -1,6 +1,6 @@
-# BaseStrike Architecture
+# BaseRift Architecture
 
-Complete architectural overview of the BaseStrike Mini App.
+Complete architectural overview of the BaseRift Mini App.
 
 ## System Architecture
 
@@ -16,7 +16,7 @@ Complete architectural overview of the BaseStrike Mini App.
                  │ HTTPS
                  ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    BaseStrike Web App (Vercel)                   │
+│                    BaseRift Web App (Vercel)                   │
 │                                                                  │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
 │  │  Next.js App │  │  API Routes  │  │ Static Assets│         │
@@ -128,9 +128,9 @@ shared/src/
 contracts/
 ├── foundry.toml                # Foundry config
 ├── src/
-│   └── BaseStrikeCosmetics.sol # ERC-1155 cosmetics
+│   └── BaseRiftCosmetics.sol # ERC-1155 cosmetics
 ├── test/
-│   └── BaseStrikeCosmetics.t.sol
+│   └── BaseRiftCosmetics.t.sol
 └── script/
     └── Deploy.s.sol            # Deployment script
 ```
