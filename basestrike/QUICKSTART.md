@@ -103,7 +103,7 @@ Should return:
 The game should load automatically on the home page.
 
 Controls:
-- **Move**: WASD or Arrow keys
+- **Move**: drag joystick (left side)
 - **Shoot**: Left click
 - **Plant**: Move to bomb site (A or B)
 

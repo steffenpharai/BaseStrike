@@ -7,7 +7,7 @@ import { test } from "@playwright/test";
 test("open and play game for viewing", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("heading", { name: /BaseRift/i }).waitFor({ state: "visible" });
-  await page.getByText(/WASD to move|Tap joystick to move/).first().waitFor({ state: "visible" });
+  await page.getByText(/Drag joystick to move/).first().waitFor({ state: "visible" });
 
   const gameArea = page.locator(".game-container").first();
   await gameArea.waitFor({ state: "visible" });

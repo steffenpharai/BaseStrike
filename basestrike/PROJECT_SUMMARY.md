@@ -143,7 +143,7 @@ This is a **production-grade**, **complete**, **tested** Base Mini App implement
 
 **Features:**
 - ✅ Phaser-based top-down shooter
-- ✅ Movement: WASD/Arrow keys
+- ✅ Movement: joystick only (drag left side)
 - ✅ Shooting: Mouse click with raycast hit detection
 - ✅ 1 map with 2 sites (A/B)
 - ✅ Buy phase (10s): 3 weapons + 2 utilities

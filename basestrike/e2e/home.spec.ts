@@ -19,7 +19,7 @@ test.describe("UI navigation", () => {
   test("Play tab shows game and controls hint", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: /BaseRift/i })).toBeVisible();
-    await expect(page.getByText(/WASD to move|Tap joystick to move/).first()).toBeVisible();
+    await expect(page.getByText(/Drag joystick to move/).first()).toBeVisible();
     await expect(page.locator(".game-container").first()).toBeVisible();
   });
 
@@ -40,11 +40,11 @@ test.describe("UI navigation", () => {
 
   test("switching between Play, Ranked, Profile updates content", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByText(/WASD to move|Tap joystick to move/).first()).toBeVisible();
+    await expect(page.getByText(/Drag joystick to move/).first()).toBeVisible();
     await page.getByRole("button", { name: /Ranked/i }).click();
     await expect(page.getByText(/Ranked Queue/i)).toBeVisible();
     await page.getByRole("button", { name: /Play/i }).click();
-    await expect(page.getByText(/WASD to move|Tap joystick to move/).first()).toBeVisible();
+    await expect(page.getByText(/Drag joystick to move/).first()).toBeVisible();
     await page.getByRole("button", { name: /Profile/i }).click();
     await expect(page.getByText(/Stats and match history/)).toBeVisible();
   });

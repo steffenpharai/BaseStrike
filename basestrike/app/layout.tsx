@@ -5,6 +5,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "BaseRift",
   description: "Top-down tactical shooter with multiplayer and replays",
+  other: {
+    "base:app_id": "697eea9d2aafa0bc9ad8a3b6",
+  },
 };
 
 /** Mobile-first: small viewports, portrait; safe area for notched devices (Base Mini App design guidelines). */

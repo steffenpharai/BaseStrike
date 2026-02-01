@@ -99,6 +99,17 @@
 
 - Use **viewport** meta: `width=device-width, initial-scale=1` (Next.js App Router adds this by default).
 - For notched devices, consider `viewport-fit=cover` and `env(safe-area-inset-*)` for padding (baserift uses `safe-area-pb`).
+- **Base app identity:** Set `base:app_id` in page/layout metadata (from Base developer dashboard) so Base can identify the app. Example in root layout:
+
+  ```tsx
+  import type { Metadata } from "next";
+
+  export const metadata: Metadata = {
+    other: {
+      "base:app_id": "697eea9d2aafa0bc9ad8a3b6", // your app id from Base
+    },
+  };
+  ```
 
 ---
 

@@ -9,13 +9,6 @@ export class GameScene extends Phaser.Scene {
   private playerNames: Map<string, Phaser.GameObjects.Text> = new Map();
   private localPlayerId: string = "";
   private gameState: Partial<GameState> = {};
-  private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
-  private wasdKeys?: {
-    W: Phaser.Input.Keyboard.Key;
-    A: Phaser.Input.Keyboard.Key;
-    S: Phaser.Input.Keyboard.Key;
-    D: Phaser.Input.Keyboard.Key;
-  };
   private touchControls?: TouchControls;
   private uiText?: Phaser.GameObjects.Text;
   private onAction?: (action: unknown) => void;
@@ -36,28 +29,16 @@ export class GameScene extends Phaser.Scene {
     // Draw map
     this.drawMap();
 
-    // Setup input
-    this.cursors = this.input.keyboard?.createCursorKeys();
-    if (this.input.keyboard) {
-      this.wasdKeys = {
-        W: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
-        A: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
-        S: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
-        D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
-      };
-    }
-
-    // Setup touch controls for mobile
+    // Joystick-only controls (mobile-first; same layout at any viewport size)
     this.touchControls = new TouchControls(this);
     this.touchControls.create();
 
-    // Setup mouse/touch for shooting (right half of screen for touch only)
+    // Visual guard: wall-style block around joystick (same look as map walls, fixed to screen)
+    this.drawJoystickGuard();
+
+    // Shooting: tap anywhere to shoot, except when tap is on the joystick (user must be on joystick to use it)
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
-      // Only reserve left half for joystick when this specific pointer is touch (not mouse/pen)
-      const isTouch = "pointerType" in pointer.event && pointer.event.pointerType === "touch";
-      if (isTouch && pointer.x < this.cameras.main.width / 2) {
-        return; // Left half is for joystick on touch devices
-      }
+      if (this.touchControls?.isPointerOnJoystick(pointer)) return;
       this.handleShoot(pointer);
     });
 
@@ -118,16 +99,10 @@ export class GameScene extends Phaser.Scene {
     const localPlayer = this.gameState.players?.get(this.localPlayerId);
     if (!localPlayer || !localPlayer.alive) return;
 
-    // Handle movement from keyboard
+    // Movement: joystick only (mobile-first; works with touch or mouse drag)
     const velocity = { x: 0, y: 0 };
     const speed = 200;
 
-    if (this.cursors?.left.isDown || this.wasdKeys?.A.isDown) velocity.x = -speed;
-    if (this.cursors?.right.isDown || this.wasdKeys?.D.isDown) velocity.x = speed;
-    if (this.cursors?.up.isDown || this.wasdKeys?.W.isDown) velocity.y = -speed;
-    if (this.cursors?.down.isDown || this.wasdKeys?.S.isDown) velocity.y = speed;
-
-    // Handle movement from touch controls – only when user is holding the joystick
     if (this.touchControls?.isActive()) {
       const joystick = this.touchControls.getVelocity();
       velocity.x = joystick.x * speed;
@@ -136,10 +111,15 @@ export class GameScene extends Phaser.Scene {
 
     if (velocity.x !== 0 || velocity.y !== 0) {
       const delta = this.game.loop.delta / 1000;
-      const newPos = checkCollision({
+      let newPos = checkCollision({
         x: localPlayer.position.x + velocity.x * delta,
         y: localPlayer.position.y + velocity.y * delta,
       });
+
+      // Block guard: don't allow player into joystick screen area (must match TouchControls position/radius)
+      if (this.isWorldPosInJoystickZone(newPos)) {
+        newPos = localPlayer.position;
+      }
 
       // Update local position directly for practice mode
       localPlayer.position = newPos;
@@ -233,6 +213,23 @@ export class GameScene extends Phaser.Scene {
     graphics.setDepth(0);
   }
 
+  /** Wall-style block around the joystick (screen-fixed; same style as map walls). Must match TouchControls position/radius. */
+  private drawJoystickGuard() {
+    const cam = this.cameras.main;
+    const joystickX = 100;
+    const joystickY = cam.height - 100;
+    const radius = 50;
+
+    const guard = this.add.graphics();
+    guard.setScrollFactor(0);
+    guard.setDepth(999); // below joystick (1000/1001)
+    guard.setPosition(joystickX, joystickY);
+    guard.fillStyle(0x4a5568);
+    guard.fillRect(-radius, -radius, radius * 2, radius * 2);
+    guard.lineStyle(2, 0x2d3748);
+    guard.strokeRect(-radius, -radius, radius * 2, radius * 2);
+  }
+
   private handleShoot(pointer: Phaser.Input.Pointer) {
     if (!this.gameState.players) return;
 
@@ -290,6 +287,20 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.uiText.setText(text);
+  }
+
+  /** True if this world position would appear inside the joystick circle on screen (block guard). Must match TouchControls position/radius. */
+  private isWorldPosInJoystickZone(worldPos: { x: number; y: number }): boolean {
+    const cam = this.cameras.main;
+    // Phaser Camera has getWorldPoint(screen→world) but not world→screen; compute from viewport and scroll/zoom
+    const screenX = cam.x + (worldPos.x - cam.scrollX) * cam.zoom;
+    const screenY = cam.y + (worldPos.y - cam.scrollY) * cam.zoom;
+    const joystickX = 100;
+    const joystickY = cam.height - 100;
+    const radius = 50;
+    const dx = screenX - joystickX;
+    const dy = screenY - joystickY;
+    return dx * dx + dy * dy <= radius * radius;
   }
 
   public updateGameState(state: Partial<GameState>) {

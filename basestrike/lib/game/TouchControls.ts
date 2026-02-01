@@ -45,6 +45,11 @@ export class TouchControls {
     return { x: this.velocity.x, y: this.velocity.y };
   }
 
+  /** True if the pointer is over the joystick base (so shoot should not fire). */
+  isPointerOnJoystick(pointer: Phaser.Input.Pointer): boolean {
+    return this.isOverJoystick(pointer);
+  }
+
   /** Radius of the joystick base circle (must match create()). */
   private static readonly BASE_RADIUS = 50;
 

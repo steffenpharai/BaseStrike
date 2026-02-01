@@ -50,10 +50,9 @@ export default function Home() {
               <GameContainer playerId={playerId} matchId={matchId} onAction={handleAction} />
             </div>
 
-            {/* Controls Hint */}
+            {/* Controls Hint - joystick only, any viewport */}
             <div className="bg-gray-800/50 rounded-lg px-4 py-3 text-center text-sm text-gray-400">
-              <span className="hidden sm:inline">WASD to move | Click to shoot</span>
-              <span className="sm:hidden">Tap joystick to move | Tap to shoot</span>
+              Drag joystick to move | Tap to shoot
             </div>
           </div>
         )}

@@ -264,7 +264,7 @@ const result = await pay({ amount, recipient });
 
 **Features:**
 - Top-down 2D shooter
-- Movement: WASD or Arrow keys
+- Movement: drag joystick (left side)
 - Shooting: Mouse click
 - 2 bomb sites (A/B)
 - Plant/defuse mechanics
