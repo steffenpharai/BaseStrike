@@ -47,10 +47,10 @@ export const PlayerActionSchema = z.discriminatedUnion("type", [
 export const RoundStateSchema = z.object({
   roundNumber: z.number(),
   phase: z.enum(["buy", "active", "planted", "ended"]),
-  attackersAlive: z.number(),
-  defendersAlive: z.number(),
+  ethereumAlive: z.number(),
+  solanaAlive: z.number(),
   bombPlanted: z.boolean(),
-  winner: z.enum(["attackers", "defenders"]).optional(),
+  winner: z.enum(["ethereum", "solana"]).optional(),
   endReason: z.enum(["elimination", "timeout", "bomb_detonated", "bomb_defused"]).optional(),
 });
 
@@ -62,7 +62,7 @@ export const ReplaySchema = z.object({
       id: z.string(),
       fid: z.number().optional(),
       displayName: z.string(),
-      team: z.enum(["attackers", "defenders"]),
+      team: z.enum(["ethereum", "solana"]),
     })
   ),
   rounds: z.array(
@@ -74,8 +74,8 @@ export const ReplaySchema = z.object({
     })
   ),
   finalScore: z.object({
-    attackers: z.number(),
-    defenders: z.number(),
+    ethereum: z.number(),
+    solana: z.number(),
   }),
   matchType: z.enum(["practice", "ranked"]),
 });

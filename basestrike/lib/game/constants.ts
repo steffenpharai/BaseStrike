@@ -15,6 +15,23 @@ export const GAME_CONSTANTS = {
 } as const;
 
 /**
+ * Virtual joystick layout (industry-standard: fixed base, left movement zone, above HUD bar).
+ * Position and radius must match TouchControls and GameScene guard/zone.
+ */
+export const JOYSTICK_LAYOUT = {
+  /** Horizontal margin from left edge (px). Centered in second grid cell (GRID_SIZE=80 → center at 120). */
+  MARGIN_LEFT: 120,
+  /** Vertical margin from bottom edge so joystick sits above HUD bottom bar (px). */
+  MARGIN_BOTTOM: 200,
+  /** Base circle radius (≥44px touch target; industry-standard size). */
+  BASE_RADIUS: 56,
+  /** Thumb/handle radius. */
+  THUMB_RADIUS: 26,
+  /** Max distance thumb moves from center (stick travel). */
+  THUMB_TRAVEL: 32,
+} as const;
+
+/**
  * Weapon Stats
  */
 export const WEAPON_STATS = {
@@ -69,4 +86,26 @@ export const NETWORK_CONSTANTS = {
   BASE_SEPOLIA_CHAIN_ID: 84532,
   BASE_MAINNET_CHAIN_ID: 8453,
   DEFAULT_RPC_URL: "https://sepolia.base.org",
+} as const;
+
+/**
+ * Team branding: Ethereum vs Solana (Base Mini App gameplay theme).
+ * Team 1 = Ethereum (defuses bomb); Team 2 = Solana (plants bomb).
+ * Colors from official brand guidelines (Ethereum blue-purple, Solana green).
+ */
+export const TEAM_BRANDING = {
+  ethereum: {
+    name: "Ethereum",
+    shortName: "ETH",
+    /** Ethereum brand blue-purple (#627EEA) for in-game player tint and HUD. */
+    colorHex: 0x627eea,
+    colorCss: "#627EEA",
+  },
+  solana: {
+    name: "Solana",
+    shortName: "SOL",
+    /** Solana brand green (#14F195) for in-game player tint and HUD. */
+    colorHex: 0x14f195,
+    colorCss: "#14F195",
+  },
 } as const;

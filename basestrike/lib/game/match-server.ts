@@ -5,7 +5,7 @@
 import { GAME_CONSTANTS, WEAPON_STATS } from "./constants";
 import type { PlayerAction, Replay } from "./schemas";
 import type { Player, GameState } from "./types";
-import { DEFAULT_MAP, isInSite } from "./map";
+import { DEFAULT_MAP, isInSite, segmentIntersectsWall } from "./map";
 import { generateReplayId, storeReplay } from "./replay-store";
 
 interface Match {
@@ -31,8 +31,8 @@ export function createMatch(matchType: "practice" | "ranked" = "practice"): stri
       roundState: {
         roundNumber: 1,
         phase: "buy",
-        attackersAlive: 0,
-        defendersAlive: 0,
+        ethereumAlive: 0,
+        solanaAlive: 0,
         bombPlanted: false,
       },
       tickNumber: 0,
@@ -57,13 +57,13 @@ export function addPlayerToMatch(
   matchId: string,
   playerId: string,
   displayName: string,
-  team: "attackers" | "defenders",
+  team: "ethereum" | "solana",
   fid?: number
 ): boolean {
   const match = getMatch(matchId);
   if (!match) return false;
 
-  const spawns = team === "attackers" ? DEFAULT_MAP.spawns.attackers : DEFAULT_MAP.spawns.defenders;
+  const spawns = team === "ethereum" ? DEFAULT_MAP.spawns.ethereum : DEFAULT_MAP.spawns.solana;
   const spawnIndex = match.state.players.size % spawns.length;
   const spawn = spawns[spawnIndex];
 
@@ -83,10 +83,10 @@ export function addPlayerToMatch(
   match.state.players.set(playerId, player);
 
   // Update alive counts
-  if (team === "attackers") {
-    match.state.roundState.attackersAlive++;
+  if (team === "ethereum") {
+    match.state.roundState.ethereumAlive++;
   } else {
-    match.state.roundState.defendersAlive++;
+    match.state.roundState.solanaAlive++;
   }
 
   return true;
@@ -141,6 +141,9 @@ function handleShoot(match: Match, shooter: Player, action: PlayerAction & { typ
 
     if (distance > maxRange) continue;
 
+    // Block shot if any wall is between shooter and target
+    if (segmentIntersectsWall(action.position, target.position)) continue;
+
     const targetAngle = Math.atan2(dy, dx);
     const angleDiff = Math.abs(targetAngle - action.angle);
 
@@ -150,10 +153,10 @@ function handleShoot(match: Match, shooter: Player, action: PlayerAction & { typ
 
       if (target.health <= 0) {
         target.alive = false;
-        if (target.team === "attackers") {
-          match.state.roundState.attackersAlive--;
+        if (target.team === "ethereum") {
+          match.state.roundState.ethereumAlive--;
         } else {
-          match.state.roundState.defendersAlive--;
+          match.state.roundState.solanaAlive--;
         }
 
         checkRoundEnd(match);
@@ -163,7 +166,7 @@ function handleShoot(match: Match, shooter: Player, action: PlayerAction & { typ
 }
 
 function handlePlant(match: Match, player: Player, action: PlayerAction & { type: "plant" }): void {
-  if (player.team !== "attackers") return;
+  if (player.team !== "solana") return;
   if (!isInSite(player.position, action.site)) return;
 
   match.state.bombSite = action.site;
@@ -173,18 +176,18 @@ function handlePlant(match: Match, player: Player, action: PlayerAction & { type
 }
 
 function handleDefuse(match: Match, player: Player): void {
-  if (player.team !== "defenders") return;
+  if (player.team !== "ethereum") return;
   if (!match.state.bombPosition) return;
 
   const dx = player.position.x - match.state.bombPosition.x;
   const dy = player.position.y - match.state.bombPosition.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
-  if (distance < 50) {
+    if (distance < 50) {
     match.state.defuseProgress += 1;
 
     if (match.state.defuseProgress >= GAME_CONSTANTS.DEFUSE_TIME * GAME_CONSTANTS.TICK_RATE) {
-      endRound(match, "defenders", "bomb_defused");
+      endRound(match, "ethereum", "bomb_defused");
     }
   } else {
     match.state.defuseProgress = 0;
@@ -209,16 +212,16 @@ function handleBuy(match: Match, player: Player, action: PlayerAction & { type: 
 function checkRoundEnd(match: Match): void {
   const state = match.state.roundState;
 
-  if (state.attackersAlive === 0) {
-    endRound(match, "defenders", "elimination");
-  } else if (state.defendersAlive === 0) {
-    endRound(match, "attackers", "elimination");
+  if (state.ethereumAlive === 0) {
+    endRound(match, "solana", "elimination");
+  } else if (state.solanaAlive === 0) {
+    endRound(match, "ethereum", "elimination");
   }
 }
 
 function endRound(
   match: Match,
-  winner: "attackers" | "defenders",
+  winner: "ethereum" | "solana",
   reason: "elimination" | "timeout" | "bomb_detonated" | "bomb_defused"
 ): void {
   match.state.roundState.winner = winner;
@@ -227,15 +230,15 @@ function endRound(
 
   // Check if match is over
   const roundsWon = countRoundsWon(match);
-  if (roundsWon.attackers >= GAME_CONSTANTS.ROUNDS_TO_WIN || roundsWon.defenders >= GAME_CONSTANTS.ROUNDS_TO_WIN) {
+  if (roundsWon.ethereum >= GAME_CONSTANTS.ROUNDS_TO_WIN || roundsWon.solana >= GAME_CONSTANTS.ROUNDS_TO_WIN) {
     endMatch(match);
   }
 }
 
-function countRoundsWon(_match: Match): { attackers: number; defenders: number } {
+function countRoundsWon(_match: Match): { ethereum: number; solana: number } {
   // Count from actions history
   // Simplified for MVP
-  return { attackers: 0, defenders: 0 };
+  return { ethereum: 0, solana: 0 };
 }
 
 function endMatch(match: Match): void {
@@ -251,8 +254,8 @@ function endMatch(match: Match): void {
     })),
     rounds: [], // Simplified - would parse from actions
     finalScore: {
-      attackers: 3,
-      defenders: 2,
+      ethereum: 3,
+      solana: 2,
     },
     matchType: match.matchType,
   };

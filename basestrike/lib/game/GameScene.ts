@@ -1,8 +1,8 @@
 import * as Phaser from "phaser";
-import type { Player, GameState } from "./types";
-import { DEFAULT_MAP, checkCollision } from "./map";
+import type { Player, GameState, HudState } from "./types";
+import { DEFAULT_MAP, checkCollision, getFirstWallHit } from "./map";
 import { TouchControls } from "./TouchControls";
-import { GAME_CONSTANTS } from "./constants";
+import { GAME_CONSTANTS, JOYSTICK_LAYOUT, TEAM_BRANDING } from "./constants";
 
 export class GameScene extends Phaser.Scene {
   private playerGraphics: Map<string, Phaser.GameObjects.Graphics> = new Map();
@@ -10,16 +10,21 @@ export class GameScene extends Phaser.Scene {
   private localPlayerId: string = "";
   private gameState: Partial<GameState> = {};
   private touchControls?: TouchControls;
-  private uiText?: Phaser.GameObjects.Text;
   private onAction?: (action: unknown) => void;
+  private onHudState?: (state: HudState) => void;
 
   constructor() {
     super({ key: "GameScene" });
   }
 
-  init(data: { playerId: string; onAction: (action: unknown) => void }) {
+  init(data: {
+    playerId: string;
+    onAction: (action: unknown) => void;
+    onHudState?: (state: HudState) => void;
+  }) {
     this.localPlayerId = data.playerId;
     this.onAction = data.onAction;
+    this.onHudState = data.onHudState;
   }
 
   create() {
@@ -33,36 +38,23 @@ export class GameScene extends Phaser.Scene {
     this.touchControls = new TouchControls(this);
     this.touchControls.create();
 
-    // Visual guard: wall-style block around joystick (same look as map walls, fixed to screen)
-    this.drawJoystickGuard();
-
     // Shooting: tap anywhere to shoot, except when tap is on the joystick (user must be on joystick to use it)
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       if (this.touchControls?.isPointerOnJoystick(pointer)) return;
       this.handleShoot(pointer);
     });
 
-    // UI Text
-    this.uiText = this.add.text(10, 10, "", {
-      fontSize: "16px",
-      color: "#ffffff",
-      backgroundColor: "#000000aa",
-      padding: { x: 10, y: 5 },
-    });
-    this.uiText.setScrollFactor(0);
-    this.uiText.setDepth(100);
-
     // Initialize local player for practice mode
     this.initializePracticeMode();
   }
 
   private initializePracticeMode() {
-    const spawnPos = DEFAULT_MAP.spawns.attackers[0];
+    const spawnPos = DEFAULT_MAP.spawns.ethereum[0];
 
     const localPlayer: Player = {
       id: this.localPlayerId,
       displayName: "You",
-      team: "attackers",
+      team: "ethereum",
       position: { x: spawnPos.x, y: spawnPos.y },
       health: 100,
       alive: true,
@@ -71,7 +63,7 @@ export class GameScene extends Phaser.Scene {
       money: 800,
     };
 
-    // Initialize game state with local player
+    // Initialize game state with local player (Team 1 = Ethereum)
     this.gameState = {
       matchId: `practice_${Date.now()}`,
       players: new Map([[this.localPlayerId, localPlayer]]),
@@ -79,8 +71,8 @@ export class GameScene extends Phaser.Scene {
       roundState: {
         phase: "active",
         roundNumber: 1,
-        attackersAlive: 1,
-        defendersAlive: 0,
+        ethereumAlive: 1,
+        solanaAlive: 0,
         bombPlanted: false,
       },
       tickNumber: 0,
@@ -93,6 +85,7 @@ export class GameScene extends Phaser.Scene {
     if (this.gameState.players) {
       this.renderPlayers(this.gameState.players);
     }
+    this.pushHudState();
   }
 
   update() {
@@ -134,8 +127,23 @@ export class GameScene extends Phaser.Scene {
       });
     }
 
-    // Update UI
-    this.updateUI();
+    // Push HUD state to React overlay
+    this.pushHudState();
+  }
+
+  private pushHudState() {
+    if (!this.onHudState || !this.gameState.roundState) return;
+    const localPlayer = this.gameState.players?.get(this.localPlayerId);
+    this.onHudState({
+      roundNumber: this.gameState.roundState.roundNumber,
+      phase: this.gameState.roundState.phase,
+      ethereumAlive: this.gameState.roundState.ethereumAlive,
+      solanaAlive: this.gameState.roundState.solanaAlive,
+      bombPlanted: this.gameState.roundState.bombPlanted ?? false,
+      health: localPlayer?.health ?? 0,
+      weapon: localPlayer?.weapon ?? "rifle",
+      money: localPlayer?.money ?? 0,
+    });
   }
 
   private drawMap() {
@@ -213,23 +221,6 @@ export class GameScene extends Phaser.Scene {
     graphics.setDepth(0);
   }
 
-  /** Wall-style block around the joystick (screen-fixed; same style as map walls). Must match TouchControls position/radius. */
-  private drawJoystickGuard() {
-    const cam = this.cameras.main;
-    const joystickX = 100;
-    const joystickY = cam.height - 100;
-    const radius = 50;
-
-    const guard = this.add.graphics();
-    guard.setScrollFactor(0);
-    guard.setDepth(999); // below joystick (1000/1001)
-    guard.setPosition(joystickX, joystickY);
-    guard.fillStyle(0x4a5568);
-    guard.fillRect(-radius, -radius, radius * 2, radius * 2);
-    guard.lineStyle(2, 0x2d3748);
-    guard.strokeRect(-radius, -radius, radius * 2, radius * 2);
-  }
-
   private handleShoot(pointer: Phaser.Input.Pointer) {
     if (!this.gameState.players) return;
 
@@ -249,8 +240,12 @@ export class GameScene extends Phaser.Scene {
       tick: this.gameState.tickNumber || 0,
     });
 
-    // Visual feedback
-    this.drawBulletTracer(localPlayer.position, { x: pointer.worldX, y: pointer.worldY });
+    // Visual feedback: clip tracer at first wall so shot doesn't appear to go through walls
+    const from = localPlayer.position;
+    const tap = { x: pointer.worldX, y: pointer.worldY };
+    const wallHit = getFirstWallHit(from, tap);
+    const end = wallHit ?? tap;
+    this.drawBulletTracer(from, end);
   }
 
   private drawBulletTracer(from: { x: number; y: number }, to: { x: number; y: number }) {
@@ -266,38 +261,14 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private updateUI() {
-    if (!this.uiText || !this.gameState.roundState) return;
-
-    const localPlayer = this.gameState.players?.get(this.localPlayerId);
-    const roundState = this.gameState.roundState;
-
-    let text = `Round: ${roundState.roundNumber}\n`;
-    text += `Phase: ${roundState.phase}\n`;
-    text += `Attackers: ${roundState.attackersAlive} | Defenders: ${roundState.defendersAlive}\n`;
-
-    if (localPlayer) {
-      text += `Health: ${localPlayer.health}\n`;
-      text += `Weapon: ${localPlayer.weapon}\n`;
-      text += `Money: $${localPlayer.money}\n`;
-    }
-
-    if (roundState.bombPlanted) {
-      text += `\nBOMB PLANTED!`;
-    }
-
-    this.uiText.setText(text);
-  }
-
   /** True if this world position would appear inside the joystick circle on screen (block guard). Must match TouchControls position/radius. */
   private isWorldPosInJoystickZone(worldPos: { x: number; y: number }): boolean {
     const cam = this.cameras.main;
-    // Phaser Camera has getWorldPoint(screen→world) but not world→screen; compute from viewport and scroll/zoom
     const screenX = cam.x + (worldPos.x - cam.scrollX) * cam.zoom;
     const screenY = cam.y + (worldPos.y - cam.scrollY) * cam.zoom;
-    const joystickX = 100;
-    const joystickY = cam.height - 100;
-    const radius = 50;
+    const joystickX = JOYSTICK_LAYOUT.MARGIN_LEFT;
+    const joystickY = cam.height - JOYSTICK_LAYOUT.MARGIN_BOTTOM;
+    const radius = JOYSTICK_LAYOUT.BASE_RADIUS;
     const dx = screenX - joystickX;
     const dy = screenY - joystickY;
     return dx * dx + dy * dy <= radius * radius;
@@ -323,7 +294,8 @@ export class GameScene extends Phaser.Scene {
       if (!player.alive) return;
 
       const graphics = this.add.graphics();
-      const color = player.team === "attackers" ? 0x00ff00 : 0xff0000;
+      const color =
+        player.team === "ethereum" ? TEAM_BRANDING.ethereum.colorHex : TEAM_BRANDING.solana.colorHex;
 
       graphics.fillStyle(color);
       graphics.fillCircle(player.position.x, player.position.y, 15);

@@ -57,15 +57,47 @@
   min-width: 44px;
 }
 
+/* Mobile-only viewport: full height, no scroll (Base design guidelines). */
+html {
+  height: 100svh;
+  height: 100dvh;
+  overflow: hidden;
+  max-width: 100vw;
+  position: fixed;
+  inset: 0;
+}
+.min-h-viewport {
+  min-height: 100svh;
+  min-height: 100dvh;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: var(--font-sans);
+  height: 100svh;
+  height: 100dvh;
+  overflow: hidden;
+  max-width: 100vw;
+  position: fixed;
+  inset: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Safe area for bottom navigation on notched devices */
+/* Safe areas: notch, Dynamic Island, home indicator, curved edges (Base design guidelines). */
+.safe-area-top {
+  padding-top: max(0px, env(safe-area-inset-top));
+}
+.safe-area-x {
+  padding-left: max(0px, env(safe-area-inset-left));
+  padding-right: max(0px, env(safe-area-inset-right));
+}
 .safe-area-pb {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+/* Main content bottom: clear fixed nav + home indicator. */
+.main-content-pb {
+  padding-bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom)));
 }
 
 /* Prevent pull-to-refresh and unwanted touch behaviors on game area */
@@ -82,11 +114,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-}
+/* Mobile-only: no viewport scroll (content fills viewport). */
 
 /* Prevent zoom on double tap - ensure inputs are 16px+ */
 button, input, select, textarea {

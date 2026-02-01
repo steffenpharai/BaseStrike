@@ -9,7 +9,7 @@ const BASE_URL =
 
 export const metadata: Metadata = {
   title: "BaseRift",
-  description: "Top-down tactical shooter with multiplayer and replays",
+  description: "Move, aim, shoot—climb the ranks in this tactical 2D shooter",
   other: {
     "base:app_id": "697fd1b02aafa0bc9ad8a4c2",
     "fc:miniapp": JSON.stringify({
@@ -29,12 +29,14 @@ export const metadata: Metadata = {
   },
 };
 
-/** Mobile-first: small viewports, portrait; safe area for notched devices (Base Mini App design guidelines). */
+/** Mobile-only: Base Mini App viewport (design guidelines). No scroll; full viewport; safe-area for notched devices. */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
   viewportFit: "cover",
   themeColor: "#0a0a0a",
+  userScalable: false,
 };
 
 export default function RootLayout({

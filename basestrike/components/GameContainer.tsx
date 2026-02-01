@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createGame, GAME_CONSTANTS } from "@/lib/game";
+import type { HudState } from "@/lib/game/types";
 import type Phaser from "phaser";
+import { GameHud } from "@/components/GameHud";
 
 /** Game size (1280×960); grid is 80px so scale must be m/80 for grid to align to pixels. */
 const GAME_WIDTH = GAME_CONSTANTS.MAP_SIZE.width;
@@ -24,6 +26,8 @@ export function GameContainer({ playerId, matchId: _matchId, onAction }: GameCon
   const gameRef = useRef<Phaser.Game | null>(null);
   const [mounted, setMounted] = useState(false);
   const [gameSize, setGameSize] = useState<{ width: number; height: number } | null>(null);
+  const [hudState, setHudState] = useState<HudState | null>(null);
+  const onHudState = useCallback((state: HudState) => setHudState(state), []);
 
   useEffect(() => {
     setMounted(true);
@@ -54,6 +58,7 @@ export function GameContainer({ playerId, matchId: _matchId, onAction }: GameCon
     gameRef.current = createGame(containerRef.current, {
       playerId,
       onAction,
+      onHudState,
     });
 
     return () => {
@@ -62,11 +67,11 @@ export function GameContainer({ playerId, matchId: _matchId, onAction }: GameCon
         gameRef.current = null;
       }
     };
-  }, [mounted, gameSize, playerId, onAction]);
+  }, [mounted, gameSize, playerId, onAction, onHudState]);
 
   if (!mounted) {
     return (
-      <div className="w-full aspect-[4/3] bg-gray-800 animate-pulse flex items-center justify-center rounded-lg">
+      <div className="w-full h-full min-h-[200px] bg-gray-800 animate-pulse flex items-center justify-center rounded-lg">
         <div className="text-gray-500">Loading game...</div>
       </div>
     );
@@ -75,17 +80,22 @@ export function GameContainer({ playerId, matchId: _matchId, onAction }: GameCon
   return (
     <div
       ref={wrapperRef}
-      className="w-full aspect-[4/3] bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center"
+      className="w-full h-full min-h-0 bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center relative"
     >
       <div
-        ref={containerRef}
-        className="game-container rounded-lg overflow-hidden"
+        className="relative rounded-lg overflow-hidden"
         style={{
-          touchAction: "none",
           width: gameSize?.width ?? 0,
           height: gameSize?.height ?? 0,
         }}
-      />
+      >
+        <div
+          ref={containerRef}
+          className="game-container absolute inset-0 rounded-lg overflow-hidden"
+          style={{ touchAction: "none" }}
+        />
+        <GameHud state={hudState} visible={mounted && !!gameSize && !!hudState} />
+      </div>
     </div>
   );
 }

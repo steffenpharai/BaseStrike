@@ -13,6 +13,7 @@ export function createGame(
   config: {
     playerId: string;
     onAction: (action: unknown) => void;
+    onHudState?: (state: import("./types").HudState) => void;
   }
 ): Phaser.Game {
   const gameConfig: Phaser.Types.Core.GameConfig = {
@@ -53,7 +54,7 @@ export function createGame(
 
   const game = new Phaser.Game(gameConfig);
 
-  // Pass data to scene
+  // Pass data to scene (playerId, onAction, onHudState)
   game.scene.start("GameScene", config);
 
   return game;
