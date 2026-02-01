@@ -1,0 +1,40 @@
+---
+description: TypeScript and Next.js conventions for basestrike and base-mini-app
+globs: **/*.ts,**/*.tsx
+alwaysApply: false
+---
+
+# TypeScript & Next.js Conventions
+
+## General
+
+- Strict TypeScript; no `any` without comment.
+- Use functional components and hooks; colocate types with modules or use `types.ts` where shared.
+
+## Next.js (App Router)
+
+- Pages in `app/**/page.tsx`; API routes in `app/api/**/route.ts`.
+- Use `"use client"` only where needed (hooks, browser APIs, interactivity).
+- Dynamic import heavy components (e.g. Phaser/GameContainer) with `ssr: false` and a loading fallback.
+- Prefer server components by default; move to client only when necessary.
+
+## Error Handling
+
+```typescript
+// Prefer: log and rethrow or return error response
+try {
+  await operation();
+} catch (e) {
+  console.error("Operation failed", e);
+  throw e; // or return NextResponse.json({ error: "..." }, { status: 500 });
+}
+```
+
+## Imports
+
+- Use path alias `@/` for project root when configured (e.g. `@/lib/config`, `@/components/GameContainer`).
+- Prefer named exports for lib and components.
+
+## Scripts
+
+- Ensure `package.json` has: `lint` (e.g. `next lint`), `typecheck` (e.g. `tsc --noEmit`), `test`, `test:e2e` where applicable.

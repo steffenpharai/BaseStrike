@@ -1,0 +1,33 @@
+---
+description: Phaser game engine, match server, and replay conventions
+globs: basestrike/lib/game/**/*,basestrike/components/Game*.tsx
+alwaysApply: false
+---
+
+# Game & Phaser Conventions
+
+Apply when editing **basestrike** game logic or GameContainer.
+
+## Structure
+
+- **lib/game:** `GameScene.ts`, `map.ts`, `match-server.ts`, `replay-store.ts`, `schemas.ts`, `types.ts`, `constants.ts`.
+- **components/GameContainer.tsx:** React wrapper; dynamic import Phaser with `ssr: false`; pass `playerId`, `matchId`, `onAction`.
+
+## Phaser
+
+- Client renders at 60 FPS; keep GameScene and map logic in lib/game.
+- Use constants and types from `lib/game`; avoid duplicating magic numbers.
+
+## Match Server
+
+- Authoritative server in `match-server.ts`; validate actions server-side; tick-based state (e.g. 64 tick/s) where applicable.
+- Client prediction + server reconciliation when adding real-time multiplayer.
+
+## Replays
+
+- Store event log per round; deterministic playback; use `replay-store.ts` for persistence (replace with DB/S3 in production).
+- Replay pages: shareable `/replay/[id]` with OG image and Frame metadata when applicable.
+
+## Stability
+
+- Ensure game init and teardown do not throw; handle missing canvas/WebGL gracefully in container.

@@ -1,0 +1,56 @@
+---
+description: Production readiness mandate; agent must not stop until checklist is satisfied
+alwaysApply: true
+---
+
+# Production Checklist (Mandate)
+
+When working on **basestrike** (or base-mini-app when relevant), treat this checklist as mandatory. Do not consider the app production-ready until each applicable item is satisfied.
+
+## Build & Quality
+
+- [ ] `npm install` and `npm run build` succeed in basestrike (from `basestrike/`).
+- [ ] `npm run lint` passes; fix or suppress only with justification.
+- [ ] `npm run typecheck` exists and passes (e.g. `tsc --noEmit`); add script if missing.
+- [ ] Unit/integration tests exist for auth, config, and critical lib; `npm test` runs them.
+- [ ] E2E tests cover: home load, manifest, auth (e.g. dev bypass); add `npm run test:e2e` and Playwright if missing.
+- [ ] CI (e.g. `.github/workflows/ci.yml`) runs from correct paths; update `apps/web` → `basestrike` and fix `packages/contracts` if not present.
+
+## Base Mini App Contract
+
+- [ ] Manifest served at `/.well-known/farcaster.json` (and `/api/manifest` if vercel rewrites point there).
+- [ ] `minikit.config.ts` / manifest: accountAssociation (env), homeUrl, webhookUrl, primaryCategory, tags; noindex when not production.
+- [ ] `/api/auth`: verifies Quick Auth JWT; domain from `MINIAPP_DOMAIN`; session token (e.g. HS256); `DEV_AUTH_BYPASS` only when `NODE_ENV` is development.
+- [ ] `/api/webhook`: responds within 3s; verifies signature (Neynar); handles miniapp_added/miniapp_removed; heavy work async.
+- [ ] Env: `.env.example` (or equivalent) documents all vars; no secrets in code; production uses `NODE_ENV=production`, `DEV_AUTH_BYPASS=false`, unique `SESSION_SECRET`.
+
+## Security
+
+- [ ] No hardcoded API keys, secrets, or private keys.
+- [ ] Auth and payment flows: server-side verification only; never trust client-only “paid” or “authenticated” flags.
+- [ ] Webhook and auth: validate body/headers (e.g. Zod); return 4xx on invalid input.
+
+## Deployability
+
+- [ ] App deploys to Vercel (or configured platform) with env-only config; no code change for deploy.
+- [ ] README or DEPLOYMENT.md describes deploy steps and production checklist.
+
+## Stability
+
+- [ ] Critical API routes and game entry have error handling; no uncaught rejections on hot paths.
+- [ ] Game/Phaser loads without crashing; match/replay logic does not throw in normal use.
+
+## Commands to Run
+
+From **basestrike** directory:
+
+```bash
+npm install
+npm run build
+npm run lint
+npm run typecheck
+npm test
+npm run test:e2e    # In CI, Playwright starts the server. Locally: run "npm run start" first or set BASE_URL.
+```
+
+Use `sudo` when required (e.g. installing Foundry globally). Do not stop until the app is production-ready per this checklist.

@@ -1,0 +1,13 @@
+---
+description: Workspace layout – basestrike vs base-mini-app
+alwaysApply: true
+---
+
+# Workspace Layout
+
+This workspace contains:
+
+- **basestrike/** – Primary app. Base Mini App (Farcaster) tactical shooter. Next.js app at repo root: `app/`, `lib/`, `components/`, `minikit.config.ts`, `vercel.json`. Make this production-ready per AGENTS.md and production-checklist.mdc.
+- **base-mini-app/** – Simpler Farcaster Mini App template (OnchainKit, no game). Improve only when relevant to basestrike or when explicitly requested.
+
+When editing files under `basestrike/`, apply base-miniapp.mdc, game-phaser.mdc, and security-env.mdc as appropriate. When editing under `base-mini-app/`, apply typescript-next.mdc and base-miniapp conventions for manifest/auth only.

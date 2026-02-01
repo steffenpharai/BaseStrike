@@ -1,0 +1,42 @@
+---
+description: Base Mini App manifest, auth, webhook, payments, and env conventions
+globs: basestrike/**/*
+alwaysApply: false
+---
+
+# Base Mini App Conventions
+
+Apply when editing **basestrike** (Base/Farcaster Mini App).
+
+## Manifest
+
+- Served at `/.well-known/farcaster.json`; Vercel may rewrite to `/api/manifest` — ensure both or the rewrite target exists.
+- Use `minikit.config.ts` (or equivalent) with: `accountAssociation` (header, payload, signature from env), `miniapp.version` "1", `miniapp.name` ≤32 chars, `homeUrl`, `webhookUrl`, `primaryCategory`, `tags` (max 5).
+- Set `noindex: true` when `NODE_ENV !== "production"`.
+- Refs: https://docs.base.org/building-with-base/mini-apps/manifest
+
+## Authentication (Quick Auth)
+
+- Client: use SDK (e.g. `quickAuth.getToken()` or OnchainKit MiniKit).
+- Server: `/api/auth` must verify JWT with domain matching `MINIAPP_DOMAIN`; issue session token (e.g. HS256); never store raw credentials client-side.
+- Dev: `DEV_AUTH_BYPASS=true` only in development; accept mock tokens (e.g. `dev:fid:username`) only when bypass enabled.
+- Refs: https://docs.base.org/building-with-base/mini-apps/authentication
+
+## Webhook
+
+- Endpoint: `/api/webhook`. **CRITICAL:** Respond with 200 within 3 seconds; process heavy work asynchronously.
+- Verify signature (e.g. Neynar `verifyAppKeyWithNeynar`); validate body with Zod.
+- Handle `miniapp_added` (store token, optional welcome notification) and `miniapp_removed` (delete token).
+- Refs: https://docs.base.org/building-with-base/mini-apps/notifications
+
+## Payments (Base Pay)
+
+- Server-side receipt verification only; never trust client “paid” flags.
+- Do not request `payerInfo` (not supported in Mini Apps).
+- Refs: https://docs.base.org/building-with-base/mini-apps/payments
+
+## Config and Env
+
+- Use `lib/config.ts` (or single source) for env; validate required vars in production.
+- Required for production: `MINIAPP_DOMAIN`, `ACCOUNT_ASSOCIATION_*`, `NEYNAR_API_KEY`, `SESSION_SECRET`, `NODE_ENV=production`, `DEV_AUTH_BYPASS=false`.
+- Document all vars in `.env.example`; no secrets in repo.

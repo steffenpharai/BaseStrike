@@ -1,0 +1,50 @@
+---
+description: Base Mini App design guidelines — mobile-first UX (layout, nav, touch, colors, typography)
+globs: basestrike/app/**/*.{tsx,css}, basestrike/components/**/*.tsx
+alwaysApply: false
+---
+
+# Design Guidelines (Mobile-First)
+
+When editing **basestrike** UI (app, components, globals), follow [Base Mini App Design Guidelines](https://docs.base.org/mini-apps/featured-guidelines/design-guidelines). See `basestrike/docs/UX-RESEARCH.md` for full research.
+
+## Layout
+
+- Design for **small viewports** and **portrait orientation** first.
+- Keep **core actions near top or middle** — not hidden behind scroll.
+- Limit buttons; make the **first action obvious** (e.g. "Start Game", "Play").
+- **Optimize for thumb reach and one-handed use.**
+
+## Navigation
+
+- Use a **bottom navigation bar** for primary tabs.
+- **Always include labels under icons** for each tab.
+- Test on multiple device sizes; ensure buttons are not cut off.
+- Use `safe-area-pb` (or `env(safe-area-inset-bottom)`) for notched devices.
+
+## Touch
+
+- **All touch targets must be at least 44px** (min height or width, or padding so hit area ≥ 44px). Use e.g. `min-h-[44px]` or `min-h-11` (44px in Tailwind).
+- Do **not** rely on **hover states** — use `:active` and tap feedback; touch screens have no hover.
+- Support tap (and swipe/pinch where appropriate).
+
+## Colors & Themes
+
+- Use **semantic color tokens** (e.g. `--color-primary`, `--color-background`, `--color-foreground`) with light/dark overrides when possible.
+- Support light and dark modes; respect system preference; allow manual toggle.
+- Maintain contrast and brand consistency.
+
+## Typography
+
+- Prefer **Inter** for body text (Base recommendation).
+- Ensure **sufficient contrast** between text and background.
+- Use regular, bold, italic; reserve decorative/script fonts for accents only.
+
+## Spacing
+
+- Use a **base spacing unit** (4px or 8px) consistently (Tailwind: 4px base).
+- Group related elements; give content room; avoid cramped layouts.
+
+## Viewport
+
+- Ensure viewport meta: `width=device-width, initial-scale=1`. For notched devices, consider `viewport-fit=cover` and safe-area insets.

@@ -1,0 +1,29 @@
+---
+description: Secrets, environment variables, and safe defaults
+globs: **/.env*,**/config.ts,**/minikit.config.ts,basestrike/lib/**/*.ts
+alwaysApply: false
+---
+
+# Security & Environment
+
+## Secrets
+
+- **Never** commit API keys, private keys, or session secrets.
+- Use environment variables only; document in `.env.example` with placeholder or empty value.
+- Production: generate `SESSION_SECRET` with `openssl rand -base64 32`; set in hosting env.
+
+## Config
+
+- Single source (e.g. `lib/config.ts`): read `process.env` once; export typed config.
+- In production, require critical vars and throw or fail fast if missing; in development, allow defaults for local runs.
+- `DEV_AUTH_BYPASS` and `NODE_ENV` must be set correctly for production (`DEV_AUTH_BYPASS=false`, `NODE_ENV=production`).
+
+## API Routes
+
+- Validate all inputs (e.g. Zod); return 400/401/403 on invalid or unauthorized requests.
+- Do not log request bodies that may contain tokens or PII in production.
+
+## Base Mini App
+
+- `accountAssociation` (header, payload, signature) from env; generate via Base Build tool for production.
+- Webhook: verify signature before processing; respond quickly; no secrets in response body.

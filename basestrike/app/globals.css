@@ -1,0 +1,101 @@
+/* OnchainKit first so its @import (Google Fonts) stays at top of compiled CSS */
+@import "@coinbase/onchainkit/styles.css";
+@import "tailwindcss";
+
+/* Semantic color tokens (Base design guidelines: primary, background, foreground; enables future light/dark). */
+:root {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-primary-active: #1d4ed8;
+  --color-background: #0a0a0a;
+  --color-foreground: #ededed;
+  --color-muted: #9ca3af;
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+  /* Base motion: snappy 120–240ms, cubic-bezier(0.4, 0, 0.2, 1) — intention-first, tech-positive polish */
+  --ease-base: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-snappy: 200ms;
+  --duration-intro: 320ms;
+}
+
+/* Logo entrance: subtle scale + opacity (Base motion — under 800ms, square-led choreography) */
+@keyframes basestrike-logo-entrance-keyframes {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.basestrike-logo-entrance {
+  animation: basestrike-logo-entrance-keyframes var(--duration-intro) var(--ease-base) both;
+}
+
+/* Optional idle: add .basestrike-logo-mark-idle for very subtle pulse (use sparingly) */
+@keyframes basestrike-logo-pulse-keyframes {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.88;
+  }
+}
+
+.basestrike-logo-mark-idle {
+  animation: basestrike-logo-pulse-keyframes 3s var(--ease-base) infinite;
+}
+
+/* Touch targets: minimum 44px (Base design guidelines – mobile-first). */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-sans);
+}
+
+/* Safe area for bottom navigation on notched devices */
+.safe-area-pb {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* Prevent pull-to-refresh and unwanted touch behaviors on game area */
+.game-container {
+  touch-action: none;
+  overscroll-behavior: contain;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Prevent tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent zoom on double tap - ensure inputs are 16px+ */
+button, input, select, textarea {
+  font-size: 16px;
+}
+
+/* Prevent text selection during gameplay */
+.no-select {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
