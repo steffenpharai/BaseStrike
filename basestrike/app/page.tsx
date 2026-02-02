@@ -100,9 +100,14 @@ export default function Home() {
     <div className="h-dvh w-full min-w-0 max-w-full overflow-hidden bg-[var(--color-background)] text-[var(--color-foreground)] flex flex-col font-sans safe-area-top safe-area-x">
       <header className="bg-[var(--color-background-alt)]/90 backdrop-blur-sm border-b border-white/10 px-3 py-2 flex-shrink-0">
         <div className="flex items-center justify-between w-full">
-          <h1 className="flex items-center min-h-[44px]">
-            <BaseRiftLogo variant="full" animated />
-          </h1>
+          <div className="flex flex-col gap-0.5 min-h-[44px] justify-center">
+            <h1 className="flex items-center">
+              <BaseRiftLogo variant="full" animated />
+            </h1>
+            <p className="text-xs text-[var(--color-muted)]" aria-label="Built by">
+              built by stefo0.base.eth
+            </p>
+          </div>
           <div className="flex items-center gap-2">
             <button
               type="button"

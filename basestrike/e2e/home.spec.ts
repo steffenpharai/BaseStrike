@@ -6,15 +6,15 @@ async function completeOnboarding(page: import("@playwright/test").Page) {
   await expect(
     page.getByText(/Moltbots play|Get started|Next/i).first()
   ).toBeVisible({ timeout: 5000 });
-  const nextBtn = page.getByRole("button", { name: /Next|Get started/i });
-  await nextBtn.click();
+  const nextBtn = page.getByRole("button", { name: /^(Next|Get started)$/i });
+  await nextBtn.first().click();
   await page.waitForTimeout(300);
-  if (await nextBtn.isVisible().catch(() => false)) {
-    await nextBtn.click();
+  if (await nextBtn.first().isVisible().catch(() => false)) {
+    await nextBtn.first().click();
     await page.waitForTimeout(300);
   }
-  if (await nextBtn.isVisible().catch(() => false)) {
-    await nextBtn.click();
+  if (await nextBtn.first().isVisible().catch(() => false)) {
+    await nextBtn.first().click();
   }
   await expect(page.getByRole("button", { name: /Watch/i }).first()).toBeVisible({ timeout: 5000 });
 }
@@ -32,9 +32,9 @@ test.describe("Home", () => {
   test("onboarding shows and can be completed", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByText(/Moltbots play|Get started|Next/i).first()).toBeVisible({ timeout: 5000 });
-    const nextBtn = page.getByRole("button", { name: /Next|Get started/i });
+    const nextBtn = page.getByRole("button", { name: /^(Next|Get started)$/i });
     for (let i = 0; i < 3; i++) {
-      await nextBtn.click();
+      await nextBtn.first().click();
       await page.waitForTimeout(400);
       if (await page.getByRole("button", { name: /Watch/i }).first().isVisible().catch(() => false)) break;
     }
@@ -54,7 +54,7 @@ test.describe("Onboarding flow", () => {
   test("first screen shows Moltbots play and Next", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByText(/Moltbots play/i).first()).toBeVisible({ timeout: 5000 });
-    await expect(page.getByRole("button", { name: /Next|Get started/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^(Next|Get started)$/i }).first()).toBeVisible();
   });
 
   test("complete onboarding → main app with Watch tab", async ({ page }) => {
@@ -100,6 +100,21 @@ test.describe("UI navigation (Watch / Bet / Profile)", () => {
     await expect(page.getByText(/Watch/i).first()).toBeVisible();
     await page.getByRole("button", { name: /Profile/i }).click();
     await expect(page.getByText(/Help us test|Profile/i).first()).toBeVisible();
+  });
+
+  test("Watch live match shows game canvas when available", async ({ page }) => {
+    await completeOnboarding(page);
+    await expect(page.getByText(/Watch/i).first()).toBeVisible();
+    await expect(
+      page.getByText(/Live|Upcoming|Finished|No matches yet|Loading/i).first()
+    ).toBeVisible({ timeout: 10000 });
+    const watchMatchBtn = page.getByRole("button", { name: /Watch match/ });
+    const count = await watchMatchBtn.count();
+    if (count > 0) {
+      await watchMatchBtn.first().click();
+      await expect(page.getByText(/Live:/i).first()).toBeVisible({ timeout: 5000 });
+      await expect(page.locator(".game-container").first()).toBeVisible({ timeout: 20000 });
+    }
   });
 });
 

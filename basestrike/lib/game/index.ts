@@ -6,6 +6,8 @@ export * from "./types";
 export * from "./map";
 export * from "./schemas";
 export * from "./constants";
+export * from "./spectator-adapter";
+export { getDummyGameState } from "./dummy-state";
 export { GameScene };
 
 export function createGame(
@@ -16,6 +18,8 @@ export function createGame(
     onHudState?: (state: import("./types").HudState) => void;
     /** Optional: team from onboarding flow (ETH → ethereum, SOL → solana). */
     team?: "ethereum" | "solana";
+    /** When true, scene runs in spectator mode: no controls, no local player; state via updateGameState. */
+    spectator?: boolean;
   }
 ): Phaser.Game {
   const gameConfig: Phaser.Types.Core.GameConfig = {
@@ -56,8 +60,12 @@ export function createGame(
 
   const game = new Phaser.Game(gameConfig);
 
-  // Pass data to scene (playerId, onAction, onHudState)
-  game.scene.start("GameScene", config);
+  const sceneData = {
+    ...config,
+    spectator: config.spectator === true,
+    onAction: config.spectator ? () => {} : config.onAction,
+  };
+  game.scene.start("GameScene", sceneData);
 
   return game;
 }

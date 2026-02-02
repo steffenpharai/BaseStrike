@@ -16,6 +16,8 @@ export interface Player {
   ammoInMagazine: number;
   utilities: Array<"flashbang" | "smoke">;
   money: number;
+  /** Demo/spectator only: angle in radians for muzzle flash and tracer. */
+  shootingAngle?: number;
 }
 
 export interface GameState {

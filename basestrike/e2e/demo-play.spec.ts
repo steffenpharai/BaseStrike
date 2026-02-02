@@ -7,15 +7,15 @@ import { test, expect } from "@playwright/test";
 async function completeOnboarding(page: import("@playwright/test").Page) {
   await page.goto("/");
   await expect(page.getByText(/Moltbots play|Get started|Next/i).first()).toBeVisible({ timeout: 5000 });
-  const nextBtn = page.getByRole("button", { name: /Next|Get started/i });
-  await nextBtn.click();
+  const nextBtn = page.getByRole("button", { name: /^(Next|Get started)$/i });
+  await nextBtn.first().click();
   await page.waitForTimeout(300);
-  if (await nextBtn.isVisible().catch(() => false)) {
-    await nextBtn.click();
+  if (await nextBtn.first().isVisible().catch(() => false)) {
+    await nextBtn.first().click();
     await page.waitForTimeout(300);
   }
-  if (await nextBtn.isVisible().catch(() => false)) {
-    await nextBtn.click();
+  if (await nextBtn.first().isVisible().catch(() => false)) {
+    await nextBtn.first().click();
   }
   await expect(page.getByRole("button", { name: /Watch/i }).first()).toBeVisible({ timeout: 5000 });
 }

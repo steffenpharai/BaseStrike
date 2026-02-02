@@ -1,9 +1,20 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState, useCallback } from "react";
 import { SpectatorView } from "./SpectatorView";
 import { MatchListSkeleton } from "./MatchListSkeleton";
 import { ReplayModal } from "./ReplayModal";
+
+/** Lazy-load demo game (Phaser) so SSR/prerender does not run window-dependent code. */
+const SpectatorDemoGame = dynamic(
+  () => import("./SpectatorDemoGame").then((m) => ({ default: m.SpectatorDemoGame })),
+  { ssr: false, loading: () => (
+    <div className="flex h-[200px] w-full items-center justify-center rounded-lg bg-[var(--color-background-alt)] text-[var(--color-muted)] text-sm" aria-busy>
+      Loading preview…
+    </div>
+  ) }
+);
 
 export type MatchStatus = "open" | "in_progress" | "finished";
 
@@ -87,23 +98,50 @@ export function WatchTab() {
 
   return (
     <div className="flex-1 min-h-0 overflow-auto flex flex-col p-2">
-      <div className="flex items-center justify-between mb-2 px-1">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-          Watch
-        </h2>
-        <button
-          type="button"
-          onClick={() => fetchMatches(true)}
-          disabled={refreshing}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-gray-400 hover:text-[var(--color-primary)] active:bg-white/10 touch-target disabled:opacity-50"
-          aria-label="Refresh matches"
+      {/* Entry: BaseRift intro — card with accent, tagline pops (ETH/SOL colors) */}
+      <section
+        className="watch-intro-in mb-4 rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-b from-[var(--color-background-alt)] to-[var(--color-background)] px-4 py-4 shadow-lg"
+        style={{ animationDelay: "0.05s" }}
+        aria-label="About BaseRift"
+      >
+        <p className="text-base font-bold text-[var(--color-foreground)] mb-2 leading-tight">
+          Watch Moltbot battles.
+          <br />
+          <span className="text-blue-400">Bet on ETH</span>
+          <span className="text-[var(--color-muted)]"> vs </span>
+          <span className="text-orange-400">SOL</span>.
+        </p>
+        <p className="text-xs text-[var(--color-muted)] leading-relaxed">
+          AI Moltbots battle in a top-down tactical shooter. Watch live and place bets on your team.
+        </p>
+      </section>
+
+      {/* Animated demo when no live matches: fixed height so Upcoming sits below */}
+      {!loading && live.length === 0 && (
+        <section
+          className="watch-intro-in watch-demo-glow mb-4 flex flex-col rounded-2xl overflow-hidden border border-white/10 bg-[var(--color-background-alt)]"
+          style={{ animationDelay: "0.1s" }}
+          aria-label="Live game preview"
         >
-          <span className="text-lg" aria-hidden>{refreshing ? "⋯" : "↻"}</span>
-        </button>
-      </div>
+          <div className="flex flex-shrink-0 items-center gap-2 px-3 py-2.5 border-b border-white/10 bg-black/20">
+            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" aria-hidden />
+            <p className="text-xs font-medium text-[var(--color-foreground)]">
+              What you&apos;ll see — full HUD and map
+            </p>
+          </div>
+          <div className="h-[36vh] min-h-[220px] max-h-[320px] w-full">
+            <SpectatorDemoGame />
+          </div>
+        </section>
+      )}
+
       {!loading && matches.length > 0 && (
-        <p className="text-xs text-gray-500 mb-2 px-1" aria-live="polite">
-          {live.length} live, {open.length} open, {finished.length} finished
+        <p className="text-xs text-[var(--color-muted)] mb-2 px-1 font-medium" aria-live="polite">
+          <span className="text-red-400/90">{live.length} live</span>
+          <span className="text-[var(--color-muted)]"> · </span>
+          <span className="text-green-400/90">{open.length} open</span>
+          <span className="text-[var(--color-muted)]"> · </span>
+          <span className="text-gray-400">{finished.length} finished</span>
         </p>
       )}
       {loading && matches.length === 0 && (
@@ -115,7 +153,7 @@ export function WatchTab() {
           <button
             type="button"
             onClick={() => { setLoading(true); fetchMatches(true); }}
-            className="min-h-[44px] px-4 rounded-lg bg-white/10 text-white touch-target"
+            className="min-h-[44px] px-4 rounded-lg bg-white/10 text-white touch-target active:bg-white/20"
           >
             Retry
           </button>
@@ -124,13 +162,17 @@ export function WatchTab() {
       {!loading && (
         <div className="space-y-4">
           {live.length > 0 && (
-            <section aria-label="Live matches">
-              <h3 className="text-xs font-semibold text-gray-500 mb-2">Live</h3>
+            <section aria-label="Live matches" className="watch-intro-in" style={{ animationDelay: "0.15s" }}>
+              <h3 className="flex items-center gap-2 text-xs font-semibold text-red-400/90 mb-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-500 watch-live-pulse" aria-hidden />
+                Live
+              </h3>
               <ul className="space-y-2">
-                {live.map((m) => (
+                {live.map((m, i) => (
                   <li
                     key={m.matchId}
-                    className="rounded-xl bg-[var(--color-background-alt)] border border-white/10 overflow-hidden"
+                    className="watch-intro-in rounded-xl bg-[var(--color-background-alt)] border border-red-500/20 overflow-hidden shadow-md"
+                    style={{ animationDelay: `${0.18 + i * 0.04}s` }}
                   >
                     <div className="flex items-center justify-between px-3 py-2">
                       <div className="flex items-center gap-2 min-w-0">
@@ -142,7 +184,7 @@ export function WatchTab() {
                       <button
                         type="button"
                         onClick={() => setSpectatorMatchId(m.matchId)}
-                        className="flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg bg-[var(--color-primary)] text-white font-medium touch-target"
+                        className="flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-[var(--color-primary)] text-white font-semibold touch-target active:scale-[0.98] transition-transform shadow-md"
                         aria-label={`Watch match ${m.matchId}`}
                       >
                         Watch
@@ -154,13 +196,16 @@ export function WatchTab() {
             </section>
           )}
           {open.length > 0 && (
-            <section aria-label="Open matches">
-              <h3 className="text-xs font-semibold text-gray-500 mb-2">Upcoming</h3>
+            <section aria-label="Open matches" className="watch-intro-in" style={{ animationDelay: "0.2s" }}>
+              <h3 className="flex items-center gap-2 text-xs font-semibold text-green-400/90 mb-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-green-500" aria-hidden />
+                Upcoming
+              </h3>
               <ul className="space-y-2">
                 {open.map((m) => (
                   <li
                     key={m.matchId}
-                    className="rounded-xl bg-[var(--color-background-alt)] border border-white/10 px-3 py-2 flex items-center justify-between"
+                    className="rounded-xl bg-[var(--color-background-alt)] border border-white/10 px-3 py-2 flex items-center justify-between shadow-sm active:bg-white/5 transition-colors"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <StatusBadge status="open" />
@@ -175,13 +220,16 @@ export function WatchTab() {
             </section>
           )}
           {finished.length > 0 && (
-            <section aria-label="Finished matches">
-              <h3 className="text-xs font-semibold text-gray-500 mb-2">Finished</h3>
+            <section aria-label="Finished matches" className="watch-intro-in" style={{ animationDelay: "0.22s" }}>
+              <h3 className="flex items-center gap-2 text-xs font-semibold text-[var(--color-muted)] mb-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-gray-500" aria-hidden />
+                Finished
+              </h3>
               <ul className="space-y-2">
                 {finished.map((m) => (
                   <li
                     key={m.matchId}
-                    className="rounded-xl bg-[var(--color-background-alt)] border border-white/10 px-3 py-2 flex items-center justify-between"
+                    className="rounded-xl bg-[var(--color-background-alt)] border border-white/10 px-3 py-2 flex items-center justify-between shadow-sm active:bg-white/5 transition-colors"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <StatusBadge status="finished" />
@@ -211,7 +259,11 @@ export function WatchTab() {
             onClose={() => setReplayMatchId(null)}
           />
           {!loading && live.length === 0 && open.length === 0 && finished.length === 0 && (
-            <p className="text-center text-gray-500 py-8">No matches yet. Matches will appear when Moltbots join.</p>
+            <div className="watch-intro-in flex flex-col items-center justify-center py-10 px-4 text-center" style={{ animationDelay: "0.12s" }}>
+              <span className="text-4xl mb-3 opacity-80" aria-hidden>🎮</span>
+              <p className="text-sm font-medium text-[var(--color-foreground)] mb-1">No matches yet</p>
+              <p className="text-xs text-[var(--color-muted)] max-w-[240px]">Moltbots will show up here when they join. Check back soon or pull to refresh.</p>
+            </div>
           )}
         </div>
       )}

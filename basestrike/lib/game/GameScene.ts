@@ -29,6 +29,8 @@ export class GameScene extends Phaser.Scene {
   private previousHealth: number = 100;
   /** Team from onboarding flow (ethereum | solana). */
   private flowTeam: "ethereum" | "solana" = "ethereum";
+  /** When true, no local player or controls; state comes from updateGameState only. */
+  private spectator = false;
 
   constructor() {
     super({ key: "GameScene" });
@@ -60,11 +62,13 @@ export class GameScene extends Phaser.Scene {
     onAction: (action: unknown) => void;
     onHudState?: (state: HudState) => void;
     team?: "ethereum" | "solana";
+    spectator?: boolean;
   }) {
     this.localPlayerId = data.playerId;
     this.onAction = data.onAction;
     this.onHudState = data.onHudState;
     this.flowTeam = data.team ?? "ethereum";
+    this.spectator = data.spectator === true;
   }
 
   create() {
@@ -74,8 +78,13 @@ export class GameScene extends Phaser.Scene {
     // Round pixels so scaled grid lines stay sharp and symmetrical
     this.cameras.main.roundPixels = true;
 
-    // Draw map
+    // Draw map (spectator and player both need map)
     this.drawMap();
+
+    if (this.spectator) {
+      // Spectator: no controls, no local player; state comes from updateGameState only
+      return;
+    }
 
     // Joystick-only controls (mobile-first; same layout at any viewport size)
     this.touchControls = new TouchControls(this);
@@ -136,6 +145,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   update() {
+    if (this.spectator) return;
     const localPlayer = this.gameState.players?.get(this.localPlayerId);
     if (!localPlayer || !localPlayer.alive) return;
 
@@ -514,6 +524,18 @@ export class GameScene extends Phaser.Scene {
       nameText.setOrigin(0.5, 0.5);
       nameText.setDepth(3);
       this.playerNames.set(id, nameText);
+
+      // Demo/spectator: draw muzzle flash and tracer when shootingAngle is set
+      const angle = player.shootingAngle;
+      if (this.spectator && angle != null) {
+        this.muzzleFlash(player.position);
+        const len = 280;
+        const to = {
+          x: player.position.x + len * Math.cos(angle),
+          y: player.position.y + len * Math.sin(angle),
+        };
+        this.drawBulletTracer(player.position, to);
+      }
     });
   }
 

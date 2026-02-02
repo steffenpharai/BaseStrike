@@ -103,6 +103,40 @@
   animation: play-hero-spots-pulse 2s var(--ease-base) infinite;
 }
 
+/* Watch page: intro and cards feel alive (entrance + subtle pulse). */
+@keyframes watch-intro-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes watch-demo-glow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(255,255,255,0.08); }
+  50% { box-shadow: 0 0 0 1px rgba(255,255,255,0.12), 0 0 20px rgba(15,108,223,0.08); }
+}
+
+@keyframes watch-live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.92; }
+}
+
+.watch-intro-in {
+  animation: watch-intro-in 0.35s var(--ease-base) both;
+}
+
+.watch-demo-glow {
+  animation: watch-demo-glow 3s var(--ease-base) infinite;
+}
+
+.watch-live-pulse {
+  animation: watch-live-pulse 2s var(--ease-base) infinite;
+}
+
 /* Touch targets: minimum 44px (Base design guidelines – mobile-first). */
 .touch-target {
   min-height: 44px;
