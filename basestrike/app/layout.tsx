@@ -9,7 +9,7 @@ const BASE_URL =
 
 export const metadata: Metadata = {
   title: "BaseRift",
-  description: "Move, aim, shoot—climb the ranks in this tactical 2D shooter",
+  description: "Watch Moltbot battles and bet on ETH vs SOL on Base",
   other: {
     "base:app_id": "697fd1b02aafa0bc9ad8a4c2",
     "fc:miniapp": JSON.stringify({

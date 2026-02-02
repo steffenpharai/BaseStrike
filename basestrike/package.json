@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:ws": "tsx server.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint app lib components minikit.config.ts next.config.ts vitest.config.ts playwright.config.ts --max-warnings 0",
@@ -11,6 +12,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "open:mobile": "node scripts/open-mobile.js",
+    "skill:zip": "node scripts/zip-skill.js",
+    "simulate:agent": "node scripts/simulate-agent.js",
     "vercel:verify": "vercel project inspect",
     "vercel:set-root": "./scripts/set-vercel-root.sh"
   },
@@ -31,6 +34,7 @@
     "tailwindcss": "^4.1.18",
     "viem": "^2.31.6",
     "wagmi": "^2.16.3",
+    "ws": "^8.19.0",
     "zod": "^3.22.4",
     "zustand": "^5.0.11"
   },
@@ -40,8 +44,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/ws": "^8.18.1",
+    "archiver": "^7.0.1",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
+    "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^2.1.0"
   }

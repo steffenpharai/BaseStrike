@@ -1,54 +1,40 @@
 /**
- * Demo: Open the app in a visible browser and play the game so you can watch.
+ * Demo: Open the app, complete onboarding, and use Watch/Bet/Profile.
  * Run: npx playwright test e2e/demo-play.spec.ts
  */
 import { test, expect } from "@playwright/test";
 
-async function goToGame(page: import("@playwright/test").Page) {
+async function completeOnboarding(page: import("@playwright/test").Page) {
   await page.goto("/");
-  await expect(page.getByText(/Choose your side/i)).toBeVisible({ timeout: 15000 });
-  await page.getByRole("button", { name: /Ethereum|Secure the chain/i }).first().click();
-  await expect(page.getByRole("heading", { name: "Loadout" })).toBeVisible({ timeout: 5000 });
-  await page.getByRole("button", { name: /Ready/i }).click();
-  await expect(page.locator(".game-container").first()).toBeVisible({ timeout: 25000 });
+  await expect(page.getByText(/Moltbots play|Get started|Next/i).first()).toBeVisible({ timeout: 5000 });
+  const nextBtn = page.getByRole("button", { name: /Next|Get started/i });
+  await nextBtn.click();
+  await page.waitForTimeout(300);
+  if (await nextBtn.isVisible().catch(() => false)) {
+    await nextBtn.click();
+    await page.waitForTimeout(300);
+  }
+  if (await nextBtn.isVisible().catch(() => false)) {
+    await nextBtn.click();
+  }
+  await expect(page.getByRole("button", { name: /Watch/i }).first()).toBeVisible({ timeout: 5000 });
 }
 
-test("open and play game for viewing", async ({ page }) => {
-  await goToGame(page);
+test("open app, complete onboarding, view Watch and Bet tabs", async ({ page }) => {
+  await completeOnboarding(page);
 
-  await expect(page.getByText(/Joystick: move/).first()).toBeVisible();
-  const gameArea = page.locator(".game-container").first();
-  await expect(page.getByText(/Round \d+/).first()).toBeVisible({ timeout: 5000 });
-  await expect(page.getByText(/Health/).first()).toBeVisible();
-  await expect(page.getByText(/Rifle|Pistol|Shotgun/).first()).toBeVisible();
+  await expect(page.getByText(/Watch/i).first()).toBeVisible();
+  await expect(
+    page.getByText(/Live|Upcoming|Finished|No matches yet|Loading matches/i).first()
+  ).toBeVisible({ timeout: 10000 });
 
-  // Dismiss tutorial overlay if present (Move → Next, Shoot → Next, Capture → Got it)
-  const tutorialNext = page.getByRole("button", { name: /Next|Got it/i });
-  if (await tutorialNext.isVisible().catch(() => false)) {
-    for (let i = 0; i < 3; i++) {
-      await tutorialNext.click();
-      await page.waitForTimeout(300);
-      if (!(await tutorialNext.isVisible().catch(() => false))) break;
-    }
-  }
+  await page.getByRole("button", { name: /Bet/i }).click();
+  await expect(
+    page.getByText(/Pick ETH or SOL|Betting coming soon|No open or live/i).first()
+  ).toBeVisible({ timeout: 5000 });
 
-  await gameArea.click({ position: { x: 400, y: 300 } });
+  await page.getByRole("button", { name: /Profile/i }).click();
+  await expect(page.getByText(/Help us test|Profile|Sign in/i).first()).toBeVisible();
 
-  const move = async (key: string, ms: number) => {
-    await page.keyboard.down(key);
-    await page.waitForTimeout(ms);
-    await page.keyboard.up(key);
-  };
-
-  await move("w", 400);
-  await move("a", 300);
-  await move("s", 400);
-  await move("d", 300);
-  await page.mouse.click(500, 400);
-  await page.waitForTimeout(200);
-  await page.mouse.click(600, 350);
-  await move("w", 600);
-  await page.mouse.click(550, 380);
-
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(1000);
 });

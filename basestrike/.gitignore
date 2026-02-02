@@ -45,3 +45,6 @@ packages/contracts/lib
 
 # Vercel
 .vercel
+
+# Built skill zip (run npm run skill:zip to create)
+basestrike-skill.zip

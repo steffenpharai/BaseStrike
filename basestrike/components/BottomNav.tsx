@@ -1,10 +1,10 @@
 "use client";
 
-export type TabId = "play" | "ranked" | "profile";
+export type TabId = "watch" | "bet" | "profile";
 
 const TABS: { id: TabId; icon: string; label: string }[] = [
-  { id: "play", icon: "🎮", label: "Play" },
-  { id: "ranked", icon: "🏆", label: "Ranked" },
+  { id: "watch", icon: "▶️", label: "Watch" },
+  { id: "bet", icon: "💰", label: "Bet" },
   { id: "profile", icon: "👤", label: "Profile" },
 ];
 
@@ -13,7 +13,7 @@ interface BottomNavProps {
   onTabChange: (tab: TabId) => void;
 }
 
-/** Slim bottom nav; Play active glow (Base design: 44px touch, labels under icons). */
+/** Slim bottom nav; Watch/Bet/Profile (Base design: 44px touch, labels under icons). */
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   return (
     <nav className="flex-shrink-0 bg-[var(--color-background-alt)]/95 backdrop-blur-sm border-t border-white/10 safe-area-x safe-area-pb">

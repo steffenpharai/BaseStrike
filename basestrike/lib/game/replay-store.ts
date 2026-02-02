@@ -7,10 +7,20 @@ import { ReplaySchema } from "./schemas";
 
 // In-memory store (replace with database in production)
 const replayStore = new Map<string, Replay>();
+const replayByMatchId = new Map<string, string>(); // matchId -> replayId
 
 export function storeReplay(replay: Replay): void {
   const validated = ReplaySchema.parse(replay);
   replayStore.set(validated.id, validated);
+  if (validated.matchId) {
+    replayByMatchId.set(validated.matchId, validated.id);
+  }
+}
+
+export function getReplayByMatchId(matchId: string): Replay | null {
+  const replayId = replayByMatchId.get(matchId);
+  if (!replayId) return null;
+  return replayStore.get(replayId) || null;
 }
 
 export function getReplay(id: string): Replay | null {

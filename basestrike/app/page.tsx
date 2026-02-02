@@ -1,6 +1,6 @@
 "use client";
+
 import { useEffect, useState, useCallback } from "react";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import { sdk, quickAuth } from "@farcaster/miniapp-sdk";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
@@ -8,19 +8,14 @@ import { BaseRiftLogo } from "@/components/BaseRiftLogo";
 import { BottomNav, type TabId } from "@/components/BottomNav";
 import { HeaderWallet } from "@/components/HeaderWallet";
 import { LeaderboardModal } from "@/components/LeaderboardModal";
-import { TutorialPopups } from "@/components/TutorialPopups";
-import FlowManager from "@/components/Flow/FlowManager";
-import { useGameFlowStore, teamToGameTeam } from "@/lib/stores/gameFlowStore";
+import { Onboarding, getOnboardingComplete } from "@/components/Onboarding";
+import { WatchTab } from "@/components/WatchTab";
+import { BetTab } from "@/components/BetTab";
 
 const BETA_CAP = 100;
 
 type BetaStatus = { count: number; full: boolean; cap: number } | null;
 type BetaSignupState = "idle" | "loading" | "joined" | "already" | "full" | "error";
-
-const GameContainer = dynamic(
-  () => import("@/components/GameContainer").then(mod => ({ default: mod.GameContainer })),
-  { ssr: false }
-);
 
 /** User display name only (Product: no 0x addresses). */
 function userDisplayName(displayName?: string | null, username?: string | null): string {
@@ -31,17 +26,12 @@ function userDisplayName(displayName?: string | null, username?: string | null):
 
 export default function Home() {
   const { setMiniAppReady, isMiniAppReady, context } = useMiniKit();
-  const flowStage = useGameFlowStore((s) => s.stage);
-  const team = useGameFlowStore((s) => s.team);
-  const resetToTeamSelect = useGameFlowStore((s) => s.resetToTeamSelect);
-  const [playerId] = useState(() => `player_${Math.random().toString(36).substr(2, 9)}`);
-  const [matchId] = useState(() => `match_${Date.now()}`);
-  const [activeTab, setActiveTab] = useState<TabId>("play");
+  const [onboarded, setOnboarded] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabId>("watch");
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [betaStatus, setBetaStatus] = useState<BetaStatus>(null);
   const [betaSignupState, setBetaSignupState] = useState<BetaSignupState>("idle");
 
-  // Base Build: call ready() in useEffect so host hides splash (migrate-existing-apps Step 2)
   useEffect(() => {
     sdk.actions.ready({ disableNativeGestures: true });
   }, []);
@@ -49,7 +39,9 @@ export default function Home() {
     if (!isMiniAppReady) setMiniAppReady({ disableNativeGestures: true });
   }, [setMiniAppReady, isMiniAppReady]);
 
-  const handleAction = (action: unknown) => console.log("Game action:", action);
+  useEffect(() => {
+    setOnboarded(getOnboardingComplete());
+  }, []);
 
   const fetchBetaStatus = useCallback(async () => {
     try {
@@ -64,7 +56,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (activeTab === "profile" || activeTab === "play") fetchBetaStatus();
+    if (activeTab === "profile") fetchBetaStatus();
   }, [activeTab, fetchBetaStatus]);
 
   const joinBeta = useCallback(async () => {
@@ -95,79 +87,42 @@ export default function Home() {
 
   const user = context?.user;
   const displayName = userDisplayName(user?.displayName, user?.username);
-  const gameTeam = team ? teamToGameTeam(team) : undefined;
+
+  if (!onboarded) {
+    return (
+      <div className="h-dvh w-full min-w-0 max-w-full overflow-hidden bg-[var(--color-background)] text-white flex flex-col font-sans safe-area-top safe-area-x">
+        <Onboarding onComplete={() => setOnboarded(true)} />
+      </div>
+    );
+  }
 
   return (
-    <div className="h-dvh w-full min-w-0 max-w-full overflow-hidden bg-[var(--color-background)] text-white flex flex-col font-sans safe-area-top safe-area-x">
-      {flowStage !== "game" && (
-        <div className="absolute inset-0 z-10 flex flex-col bg-gradient-to-b from-[#0A0A0F] to-[#1A1A2E]">
-          <FlowManager />
-        </div>
-      )}
-
-      {flowStage === "game" && (
-        <>
-          <header className="bg-[var(--color-background-alt)]/90 backdrop-blur-sm border-b border-white/10 px-3 py-2 flex-shrink-0">
-            <div className="flex items-center justify-between w-full">
-              <h1 className="flex items-center min-h-[44px]">
-                <BaseRiftLogo variant="full" animated />
-              </h1>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setLeaderboardOpen(true)}
-                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-gray-400 hover:text-[var(--color-primary)] touch-target"
-                  aria-label="Leaderboard"
-                >
-                  <span className="text-xl" aria-hidden>🏆</span>
-                </button>
-                <HeaderWallet user={user} displayName={displayName} />
-              </div>
-            </div>
-          </header>
-          <LeaderboardModal open={leaderboardOpen} onClose={() => setLeaderboardOpen(false)} />
-
-          <main className="flex-1 min-h-0 overflow-hidden flex flex-col p-2 main-content-pb">
-            <div className="flex-1 min-h-0 min-w-0 w-full flex flex-col">
-              {activeTab === "play" && (
-                <div className="flex-1 min-h-0 flex flex-col">
-                  <p className="flex-shrink-0 text-[10px] text-center text-gray-500 py-1 px-2" aria-label="How to play">
-                    Live: Climb Ranks · Joystick: move · Tap: shoot
-                  </p>
-                  <div className="flex-1 min-h-0 min-w-0 rounded-xl overflow-hidden bg-[var(--color-background-alt)] relative">
-                    <GameContainer
-                      playerId={playerId}
-                      matchId={matchId}
-                      onAction={handleAction}
-                      team={gameTeam}
-                    />
-                    <TutorialPopups />
-                    <button
-                      type="button"
-                      onClick={resetToTeamSelect}
-                      className="absolute top-2 left-2 z-20 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border border-white/20 bg-black/40 text-white/90 touch-target text-sm"
-                      aria-label="Leave match"
-                    >
-                      ← Leave
-                    </button>
-                  </div>
-                </div>
-              )}
-
-        {activeTab === "ranked" && (
-          <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-4 bg-gray-800 rounded-xl">
-            <div className="text-4xl mb-2">🏆</div>
-            <h2 className="text-lg font-bold mb-1">Ranked Queue</h2>
-            <p className="text-sm text-gray-400 mb-4">Stake 0.001 ETH to compete</p>
-            <button className="w-full min-h-[44px] bg-blue-600 active:bg-blue-800 text-white font-semibold rounded-xl transition-colors touch-target">
-              Coming Soon
+    <div className="h-dvh w-full min-w-0 max-w-full overflow-hidden bg-[var(--color-background)] text-[var(--color-foreground)] flex flex-col font-sans safe-area-top safe-area-x">
+      <header className="bg-[var(--color-background-alt)]/90 backdrop-blur-sm border-b border-white/10 px-3 py-2 flex-shrink-0">
+        <div className="flex items-center justify-between w-full">
+          <h1 className="flex items-center min-h-[44px]">
+            <BaseRiftLogo variant="full" animated />
+          </h1>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setLeaderboardOpen(true)}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-gray-400 hover:text-[var(--color-primary)] touch-target"
+              aria-label="Leaderboard"
+            >
+              <span className="text-xl" aria-hidden>🏆</span>
             </button>
+            <HeaderWallet user={user} displayName={displayName} />
           </div>
-        )}
+        </div>
+      </header>
+      <LeaderboardModal open={leaderboardOpen} onClose={() => setLeaderboardOpen(false)} />
 
+      <main className="flex-1 min-h-0 overflow-hidden flex flex-col main-content-pb">
+        {activeTab === "watch" && <WatchTab />}
+        {activeTab === "bet" && <BetTab />}
         {activeTab === "profile" && (
-          <div className="flex-1 min-h-0 overflow-auto flex flex-col items-center p-4 bg-gray-800 rounded-xl">
-            {/* Product: show avatar + username (no 0x addresses). */}
+          <div className="flex-1 min-h-0 overflow-auto flex flex-col items-center p-4 bg-[var(--color-background)]">
             {user ? (
               <>
                 {user.pfpUrl ? (
@@ -186,14 +141,13 @@ export default function Home() {
                     {displayName.charAt(0).toUpperCase()}
                   </span>
                 )}
-                <h2 className="text-lg font-bold text-white">{displayName}</h2>
+                <h2 className="text-lg font-bold text-[var(--color-foreground)]">{displayName}</h2>
                 <p className="text-sm text-gray-400 mt-1 mb-4">Stats and match history coming soon</p>
 
-                {/* Beta tester signup — cap 100; low friction (Base building guidelines). */}
-                <section className="w-full max-w-sm rounded-xl bg-gray-700/80 px-4 py-3 border border-gray-600" aria-label="Join beta">
-                  <h3 className="text-sm font-semibold text-white mb-1">Help us test</h3>
+                <section className="w-full max-w-sm rounded-xl bg-[var(--color-background-alt)] px-4 py-3 border border-white/10" aria-label="Join beta">
+                  <h3 className="text-sm font-semibold text-[var(--color-foreground)] mb-1">Help us test</h3>
                   <p className="text-xs text-gray-400 mb-3">
-                    Join the beta list (max {betaStatus?.cap ?? BETA_CAP} testers). We’ll reach out before launch.
+                    Join the beta list (max {betaStatus?.cap ?? BETA_CAP} testers). We&apos;ll reach out before launch.
                   </p>
                   {betaStatus && (
                     <p className="text-xs text-gray-500 mb-3" aria-live="polite">
@@ -202,7 +156,7 @@ export default function Home() {
                   )}
                   {betaSignupState === "joined" || betaSignupState === "already" ? (
                     <p className="text-sm text-green-400 font-medium min-h-[44px] flex items-center justify-center touch-target">
-                      You’re on the list
+                      {`You're on the list`}
                     </p>
                   ) : betaStatus?.full ? (
                     <p className="text-sm text-gray-400 min-h-[44px] flex items-center justify-center touch-target">
@@ -213,7 +167,7 @@ export default function Home() {
                       type="button"
                       onClick={joinBeta}
                       disabled={betaSignupState === "loading"}
-                      className="w-full min-h-[44px] bg-blue-600 active:bg-blue-800 disabled:opacity-60 text-white font-semibold rounded-xl transition-colors touch-target"
+                      className="w-full min-h-[44px] bg-[var(--color-primary)] active:bg-[var(--color-primary-active)] disabled:opacity-60 text-white font-semibold rounded-xl transition-colors touch-target"
                     >
                       {betaSignupState === "loading" ? "Joining…" : betaSignupState === "error" ? "Try again" : "Join the beta"}
                     </button>
@@ -226,23 +180,20 @@ export default function Home() {
             ) : (
               <>
                 <div className="text-4xl mb-2" aria-hidden>👤</div>
-                <h2 className="text-lg font-bold mb-1">Profile</h2>
+                <h2 className="text-lg font-bold text-[var(--color-foreground)] mb-1">Profile</h2>
                 <p className="text-sm text-gray-400 mb-4">Sign in to see your stats and match history</p>
-                <section className="w-full max-w-sm rounded-xl bg-gray-700/80 px-4 py-3 border border-gray-600" aria-label="Join beta">
-                  <h3 className="text-sm font-semibold text-white mb-1">Help us test</h3>
+                <section className="w-full max-w-sm rounded-xl bg-[var(--color-background-alt)] px-4 py-3 border border-white/10" aria-label="Join beta">
+                  <h3 className="text-sm font-semibold text-[var(--color-foreground)] mb-1">Help us test</h3>
                   <p className="text-xs text-gray-400">
-                    Sign in to join the beta tester list (max {BETA_CAP} people). We’ll reach out before launch.
+                    Sign in to join the beta tester list (max {BETA_CAP} people). We&apos;ll reach out before launch.
                   </p>
                 </section>
               </>
             )}
           </div>
         )}
-              </div>
-            </main>
-            <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-          </>
-        )}
+      </main>
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 }

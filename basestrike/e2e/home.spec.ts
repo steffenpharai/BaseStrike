@@ -1,32 +1,44 @@
 import { test, expect } from "@playwright/test";
 
-/**
- * Go through onboarding flow to reach the game (so tests can assert on game UI).
- * Loading (~2.5s) → Team → Inventory → Queue (2–10s + 5s countdown).
- */
-async function goToGame(page: import("@playwright/test").Page) {
+/** Complete new onboarding (3 screens) and reach main app with Watch/Bet/Profile. */
+async function completeOnboarding(page: import("@playwright/test").Page) {
   await page.goto("/");
-  await expect(page.getByText(/BaseRift|Loading assets/).first()).toBeVisible({ timeout: 5000 });
-  await expect(page.getByText(/Choose your side/i)).toBeVisible({ timeout: 15000 });
-  await page.getByRole("button", { name: /Ethereum|Secure the chain/i }).first().click();
-  await expect(page.getByRole("heading", { name: "Loadout" })).toBeVisible({ timeout: 5000 });
-  await page.getByRole("button", { name: /Ready/i }).click();
-  await expect(page.getByRole("heading", { name: /Queueing|Get ready/i })).toBeVisible({ timeout: 5000 });
-  await expect(page.locator(".game-container").first()).toBeVisible({ timeout: 25000 });
+  await expect(
+    page.getByText(/Moltbots play|Get started|Next/i).first()
+  ).toBeVisible({ timeout: 5000 });
+  const nextBtn = page.getByRole("button", { name: /Next|Get started/i });
+  await nextBtn.click();
+  await page.waitForTimeout(300);
+  if (await nextBtn.isVisible().catch(() => false)) {
+    await nextBtn.click();
+    await page.waitForTimeout(300);
+  }
+  if (await nextBtn.isVisible().catch(() => false)) {
+    await nextBtn.click();
+  }
+  await expect(page.getByRole("button", { name: /Watch/i }).first()).toBeVisible({ timeout: 5000 });
 }
 
 test.describe("Home", () => {
-  test("page loads and shows BaseRift or loading", async ({ page }) => {
+  test("page loads and shows BaseRift or onboarding", async ({ page }) => {
     await page.goto("/");
     await expect(
-      page.getByText(/BaseRift/i).or(page.getByText(/Loading assets/i)).first()
+      page.getByText(/BaseRift|Moltbots play|Loading/i).or(
+        page.getByRole("button", { name: /Next|Get started/i })
+      ).first()
     ).toBeVisible({ timeout: 5000 });
   });
 
-  test("loading advances to team select", async ({ page }) => {
+  test("onboarding shows and can be completed", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByText(/BaseRift|Loading assets/).first()).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText(/Choose your side/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Moltbots play|Get started|Next/i).first()).toBeVisible({ timeout: 5000 });
+    const nextBtn = page.getByRole("button", { name: /Next|Get started/i });
+    for (let i = 0; i < 3; i++) {
+      await nextBtn.click();
+      await page.waitForTimeout(400);
+      if (await page.getByRole("button", { name: /Watch/i }).first().isVisible().catch(() => false)) break;
+    }
+    await expect(page.getByRole("button", { name: /Watch/i }).first()).toBeVisible({ timeout: 5000 });
   });
 
   test("manifest is reachable", async ({ request }) => {
@@ -39,67 +51,64 @@ test.describe("Home", () => {
 });
 
 test.describe("Onboarding flow", () => {
-  test("team select shows ETH and SOL options", async ({ page }) => {
+  test("first screen shows Moltbots play and Next", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByText(/Choose your side/i)).toBeVisible({ timeout: 15000 });
-    await expect(page.getByText(/Ethereum|Secure the chain/i).first()).toBeVisible();
-    await expect(page.getByText(/Solana|Outpace/i).first()).toBeVisible();
+    await expect(page.getByText(/Moltbots play/i).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole("button", { name: /Next|Get started/i })).toBeVisible();
   });
 
-  test("pick team → loadout → ready → queue → game", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByText(/Choose your side/i)).toBeVisible({ timeout: 15000 });
-    await page.getByRole("button", { name: /Ethereum|Secure the chain/i }).first().click();
-    await expect(page.getByRole("heading", { name: "Loadout" })).toBeVisible({ timeout: 5000 });
-    await page.getByRole("button", { name: /Ready/i }).click();
-    await expect(page.getByRole("heading", { name: /Queueing|Get ready/i })).toBeVisible({ timeout: 5000 });
-    await expect(page.locator(".game-container").first()).toBeVisible({ timeout: 25000 });
+  test("complete onboarding → main app with Watch tab", async ({ page }) => {
+    await completeOnboarding(page);
+    await expect(page.getByText(/Watch/i).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Watch/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Bet/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Profile/i })).toBeVisible();
   });
 });
 
-test.describe("UI navigation (in-game)", () => {
-  test("after flow, Play tab shows game and controls hint", async ({ page }) => {
-    await goToGame(page);
-    await expect(page.getByText(/Joystick: move/).first()).toBeVisible();
-    await expect(page.locator(".game-container").first()).toBeVisible();
+test.describe("UI navigation (Watch / Bet / Profile)", () => {
+  test("Watch tab shows match list or empty state", async ({ page }) => {
+    await completeOnboarding(page);
+    await expect(page.getByText(/Watch/i).first()).toBeVisible();
+    await expect(
+      page.getByText(/Live|Upcoming|Finished|No matches yet|Loading matches/i).first()
+    ).toBeVisible({ timeout: 10000 });
   });
 
-  test("after flow, Play tab shows HUD elements", async ({ page }) => {
-    await goToGame(page);
-    await expect(page.getByText(/Round \d+/).first()).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText(/Health/).first()).toBeVisible();
-    await expect(page.getByText(/Rifle|Pistol|Shotgun/).first()).toBeVisible();
-  });
-
-  test("after flow, Play tab has no large Beta testers block", async ({ page }) => {
-    await goToGame(page);
-    await expect(page.getByText(/Live: Climb Ranks/).first()).toBeVisible();
-    await expect(page.getByText(/0\/100 testers|First 100 get/)).not.toBeVisible();
-  });
-
-  test("Ranked tab shows ranked content", async ({ page }) => {
-    await goToGame(page);
-    await page.getByRole("button", { name: /Ranked/i }).click();
-    await expect(page.getByText(/Ranked Queue/i)).toBeVisible();
-    await expect(page.getByText(/Stake 0.001 ETH/)).toBeVisible();
-    await expect(page.getByRole("button", { name: /Coming Soon/i })).toBeVisible();
+  test("Bet tab shows bet content", async ({ page }) => {
+    await completeOnboarding(page);
+    await page.getByRole("button", { name: /Bet/i }).click();
+    await expect(page.getByText(/Bet/i).first()).toBeVisible();
+    await expect(
+      page.getByText(/Pick ETH or SOL|Betting coming soon|No open or live/i).first()
+    ).toBeVisible({ timeout: 5000 });
   });
 
   test("Profile tab shows profile content", async ({ page }) => {
-    await goToGame(page);
+    await completeOnboarding(page);
     await page.getByRole("button", { name: /Profile/i }).click();
     await expect(page.getByText(/Profile/i).first()).toBeVisible();
-    await expect(page.getByText(/stats and match history/i)).toBeVisible();
+    await expect(page.getByText(/stats and match history|Help us test/i).first()).toBeVisible();
   });
 
-  test("switching between Play, Ranked, Profile updates content", async ({ page }) => {
-    await goToGame(page);
-    await expect(page.getByText(/Joystick: move/).first()).toBeVisible();
-    await page.getByRole("button", { name: /Ranked/i }).click();
-    await expect(page.getByText(/Ranked Queue/i)).toBeVisible();
-    await page.getByRole("button", { name: /Play/i }).click();
-    await expect(page.getByText(/Joystick: move/).first()).toBeVisible();
+  test("switching between Watch, Bet, Profile updates content", async ({ page }) => {
+    await completeOnboarding(page);
+    await expect(page.getByText(/Watch/i).first()).toBeVisible();
+    await page.getByRole("button", { name: /Bet/i }).click();
+    await expect(page.getByText(/Pick ETH or SOL|Betting/i).first()).toBeVisible({ timeout: 5000 });
+    await page.getByRole("button", { name: /Watch/i }).click();
+    await expect(page.getByText(/Watch/i).first()).toBeVisible();
     await page.getByRole("button", { name: /Profile/i }).click();
-    await expect(page.getByText(/stats and match history/i)).toBeVisible();
+    await expect(page.getByText(/Help us test|Profile/i).first()).toBeVisible();
+  });
+});
+
+test.describe("API", () => {
+  test("GET /api/matches returns matches array", async ({ request }) => {
+    const res = await request.get("/api/matches");
+    expect(res.ok()).toBe(true);
+    const body = await res.json();
+    expect(body).toHaveProperty("matches");
+    expect(Array.isArray(body.matches)).toBe(true);
   });
 });

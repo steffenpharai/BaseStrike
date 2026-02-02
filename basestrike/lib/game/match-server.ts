@@ -2,7 +2,7 @@
  * Match Server - Authoritative game state management
  * Handles match creation, player actions, and game simulation
  */
-import { GAME_CONSTANTS, WEAPON_STATS } from "./constants";
+import { GAME_CONSTANTS, MAX_PLAYERS_PER_TEAM, WEAPON_STATS } from "./constants";
 import type { PlayerAction, Replay } from "./schemas";
 import type { Player, GameState } from "./types";
 import { DEFAULT_MAP, isInSite, segmentIntersectsWall } from "./map";
@@ -14,6 +14,23 @@ interface Match {
   actions: PlayerAction[];
   createdAt: number;
   matchType: "practice" | "ranked";
+  /** Set when match ends (endMatch); used for listMatches status. */
+  finishedAt?: number;
+}
+
+/** Minimum open matches to keep available so moltbots always have something to join. */
+const MIN_OPEN_MATCHES = 2;
+
+export type MatchStatus = "open" | "in_progress" | "finished";
+
+export interface MatchSummary {
+  matchId: string;
+  status: MatchStatus;
+  ethereumCount: number;
+  solanaCount: number;
+  maxPerTeam: number;
+  createdAt: number;
+  finishedAt?: number;
 }
 
 // In-memory match store
@@ -53,6 +70,40 @@ export function getMatch(matchId: string): Match | null {
   return matches.get(matchId) || null;
 }
 
+/** JSON-serializable snapshot of game state for WebSocket broadcast. */
+export function getStateSnapshot(matchId: string): Record<string, unknown> | null {
+  const match = getMatch(matchId);
+  if (!match) return null;
+  const s = match.state;
+  return {
+    matchId: s.matchId,
+    players: Array.from(s.players.values()).map((p) => ({
+      id: p.id,
+      displayName: p.displayName,
+      team: p.team,
+      position: p.position,
+      health: p.health,
+      alive: p.alive,
+      weapon: p.weapon,
+      ammoInMagazine: p.ammoInMagazine,
+      money: p.money,
+    })),
+    roundNumber: s.roundNumber,
+    roundState: s.roundState,
+    tickNumber: s.tickNumber,
+    bombSite: s.bombSite,
+    bombPosition: s.bombPosition,
+    defuseProgress: s.defuseProgress,
+    finished: match.finishedAt != null,
+  };
+}
+
+function countTeamPlayers(match: Match, team: "ethereum" | "solana"): number {
+  let n = 0;
+  for (const p of match.state.players.values()) if (p.team === team) n++;
+  return n;
+}
+
 export function addPlayerToMatch(
   matchId: string,
   playerId: string,
@@ -62,10 +113,14 @@ export function addPlayerToMatch(
 ): boolean {
   const match = getMatch(matchId);
   if (!match) return false;
+  if (match.finishedAt != null) return false;
+
+  const teamCount = countTeamPlayers(match, team);
+  if (teamCount >= MAX_PLAYERS_PER_TEAM) return false;
 
   const spawns = team === "ethereum" ? DEFAULT_MAP.spawns.ethereum : DEFAULT_MAP.spawns.solana;
-  const spawnIndex = match.state.players.size % spawns.length;
-  const spawn = spawns[spawnIndex];
+  const spawnIndex = teamCount;
+  const spawn = spawns[spawnIndex]!;
 
   const player: Player = {
     id: playerId,
@@ -243,9 +298,12 @@ function countRoundsWon(_match: Match): { ethereum: number; solana: number } {
 }
 
 function endMatch(match: Match): void {
-  // Generate replay
+  match.finishedAt = Date.now();
+
+  // Generate replay (include matchId for lookup)
   const replay: Replay = {
     id: generateReplayId(),
+    matchId: match.id,
     timestamp: Date.now(),
     players: Array.from(match.state.players.values()).map((p) => ({
       id: p.id,
@@ -262,4 +320,49 @@ function endMatch(match: Match): void {
   };
 
   storeReplay(replay);
+}
+
+/**
+ * Ensure at least MIN_OPEN_MATCHES open matches exist (proactive match creation for moltbots).
+ */
+export function ensureOpenMatches(): void {
+  const summaries = listMatchesInternal();
+  const openCount = summaries.filter((s) => s.status === "open").length;
+  for (let i = openCount; i < MIN_OPEN_MATCHES; i++) {
+    createMatch("practice");
+  }
+}
+
+function listMatchesInternal(): MatchSummary[] {
+  const out: MatchSummary[] = [];
+  for (const match of matches.values()) {
+    const ethereumCount = countTeamPlayers(match, "ethereum");
+    const solanaCount = countTeamPlayers(match, "solana");
+    const hasSlots = ethereumCount < MAX_PLAYERS_PER_TEAM || solanaCount < MAX_PLAYERS_PER_TEAM;
+    const status: MatchStatus = match.finishedAt
+      ? "finished"
+      : hasSlots
+        ? "open"
+        : "in_progress";
+    out.push({
+      matchId: match.id,
+      status,
+      ethereumCount,
+      solanaCount,
+      maxPerTeam: MAX_PLAYERS_PER_TEAM,
+      createdAt: match.createdAt,
+      finishedAt: match.finishedAt,
+    });
+  }
+  return out.sort((a, b) => b.createdAt - a.createdAt);
+}
+
+/**
+ * List all matches for agents (open/live) and humans (upcoming/live/finished).
+ * Public, unauthenticated; used by moltbots to find joinable matches.
+ * Ensures at least MIN_OPEN_MATCHES open matches exist before returning.
+ */
+export function listMatches(): MatchSummary[] {
+  ensureOpenMatches();
+  return listMatchesInternal();
 }

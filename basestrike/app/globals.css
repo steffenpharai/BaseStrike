@@ -17,7 +17,7 @@
   --font-sans: "Inter", system-ui, sans-serif;
 }
 
-/* Semantic aliases and motion (non-utility). */
+/* Semantic aliases and motion (non-utility). Dark default (Base Featured: light and dark modes). */
 :root {
   --background: var(--color-background);
   --foreground: var(--color-foreground);
@@ -25,6 +25,17 @@
   --duration-fast: 120ms;
   --duration-snappy: 200ms;
   --duration-intro: 320ms;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-background: #f4f4f5;
+    --color-background-alt: #e4e4e7;
+    --color-foreground: #18181b;
+    --color-muted: #52525b;
+    --background: var(--color-background);
+    --foreground: var(--color-foreground);
+  }
 }
 
 /* Logo entrance: subtle scale + opacity (Base motion — under 800ms, square-led choreography) */

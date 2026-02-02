@@ -1,6 +1,9 @@
 /**
  * Game Constants
  */
+/** Max players per team (matches map spawn count). */
+export const MAX_PLAYERS_PER_TEAM = 5;
+
 export const GAME_CONSTANTS = {
   TICK_RATE: 64,
   ROUND_TIME: 115, // seconds
@@ -10,6 +13,7 @@ export const GAME_CONSTANTS = {
   BOMB_TIMER: 40, // seconds
   ROUNDS_TO_WIN: 3, // best of 5
   MAP_SIZE: { width: 1280, height: 960 },
+  MAX_PLAYERS_PER_TEAM,
   /** Grid step for floor grid; must divide MAP_SIZE width and height evenly for a symmetrical grid. */
   GRID_SIZE: 80,
 } as const;

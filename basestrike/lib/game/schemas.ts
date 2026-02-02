@@ -56,6 +56,7 @@ export const RoundStateSchema = z.object({
 
 export const ReplaySchema = z.object({
   id: z.string(),
+  matchId: z.string().optional(),
   timestamp: z.number(),
   players: z.array(
     z.object({
