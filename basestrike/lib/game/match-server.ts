@@ -76,6 +76,7 @@ export function addPlayerToMatch(
     health: 100,
     alive: true,
     weapon: "pistol",
+    ammoInMagazine: WEAPON_STATS.pistol.magazineSize,
     utilities: [],
     money: 800,
   };

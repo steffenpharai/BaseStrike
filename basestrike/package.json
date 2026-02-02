@@ -21,6 +21,8 @@
     "@tailwindcss/postcss": "^4.1.18",
     "@tanstack/react-query": "^5.81.5",
     "jose": "^5.2.0",
+    "@fontsource/inter": "^5.0.0",
+    "framer-motion": "^11.0.0",
     "next": "^16.1.6",
     "phaser": "^3.70.0",
     "postcss": "^8.5.6",

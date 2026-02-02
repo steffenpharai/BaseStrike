@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createGame, GAME_CONSTANTS } from "@/lib/game";
+import { div as MotionDiv } from "framer-motion/client";
+import { createGame, GAME_CONSTANTS, type FireTrigger } from "@/lib/game";
 import type { HudState } from "@/lib/game/types";
 import type Phaser from "phaser";
 import { GameHud } from "@/components/GameHud";
@@ -25,9 +26,11 @@ export function GameContainer({ playerId, matchId: _matchId, onAction }: GameCon
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [gameSize, setGameSize] = useState<{ width: number; height: number } | null>(null);
   const [hudState, setHudState] = useState<HudState | null>(null);
   const onHudState = useCallback((state: HudState) => setHudState(state), []);
+  const fireTriggerRef = useRef<FireTrigger | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -59,6 +62,7 @@ export function GameContainer({ playerId, matchId: _matchId, onAction }: GameCon
       playerId,
       onAction,
       onHudState,
+      fireTriggerRef,
     });
 
     return () => {
@@ -71,16 +75,28 @@ export function GameContainer({ playerId, matchId: _matchId, onAction }: GameCon
 
   if (!mounted) {
     return (
-      <div className="w-full h-full min-h-[200px] bg-gray-800 animate-pulse flex items-center justify-center rounded-lg">
-        <div className="text-gray-500">Loading game...</div>
+      <div
+        className="flex h-full min-h-[200px] w-full flex-col items-center justify-center gap-4 rounded-lg bg-[var(--color-background-alt)]"
+        aria-busy
+        aria-label="Loading game"
+      >
+        <div
+          className="h-12 w-12 shrink-0 rounded-full border-2 border-[var(--color-primary)]/40 border-t-[var(--color-primary)] animate-spin"
+          aria-hidden
+        />
+        <div className="h-3 w-48 rounded-full bg-white/10 animate-pulse" />
+        <span className="text-sm text-[var(--color-muted)]">Loading game…</span>
       </div>
     );
   }
 
   return (
-    <div
+    <MotionDiv
       ref={wrapperRef}
-      className="w-full h-full min-h-0 bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center relative"
+      className="w-full h-full min-h-0 bg-[var(--color-background)] rounded-lg overflow-hidden flex items-center justify-center relative"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
     >
       <div
         className="relative rounded-lg overflow-hidden"
@@ -94,8 +110,50 @@ export function GameContainer({ playerId, matchId: _matchId, onAction }: GameCon
           className="game-container absolute inset-0 rounded-lg overflow-hidden"
           style={{ touchAction: "none" }}
         />
-        <GameHud state={hudState} visible={mounted && !!gameSize && !!hudState} />
+        <GameHud state={hudState} visible={mounted && !!gameSize && !!hudState && !paused} />
+        {/* Pause button (top-right). */}
+        <button
+          type="button"
+          aria-label={paused ? "Resume" : "Pause"}
+          className="absolute top-2 right-2 z-20 flex h-10 w-10 items-center justify-center rounded-lg border border-white/20 bg-black/40 text-white/90 touch-target"
+          onClick={() => setPaused((p) => !p)}
+        >
+          <span className="text-lg font-bold" aria-hidden>{paused ? "▶" : "⏸"}</span>
+        </button>
+        {/* Paused overlay (esc-like). */}
+        {paused && (
+          <div
+            className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-4 bg-black/70 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="paused-title"
+          >
+            <h2 id="paused-title" className="text-xl font-semibold text-white">
+              Paused
+            </h2>
+            <button
+              type="button"
+              onClick={() => setPaused(false)}
+              className="min-h-[48px] px-6 rounded-xl bg-[var(--color-primary)] text-white font-semibold touch-target"
+            >
+              Resume
+            </button>
+          </div>
+        )}
+        {/* Optional fire button (60px, bottom-right); pointer-events so it receives taps. */}
+        <button
+          type="button"
+          aria-label="Fire"
+          className="absolute bottom-4 right-4 z-20 flex h-[60px] w-[60px] items-center justify-center rounded-full border-2 border-white/30 bg-black/50 backdrop-blur-sm text-white/90 touch-target active:scale-95 active:bg-black/70 transition-transform"
+          style={{ minWidth: 60, minHeight: 60 }}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            fireTriggerRef.current?.shoot();
+          }}
+        >
+          <span className="text-xl font-bold" aria-hidden>🔥</span>
+        </button>
       </div>
-    </div>
+    </MotionDiv>
   );
 }

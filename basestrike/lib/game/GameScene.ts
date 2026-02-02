@@ -2,9 +2,16 @@ import * as Phaser from "phaser";
 import type { Player, GameState, HudState } from "./types";
 import { DEFAULT_MAP, checkCollision, getFirstWallHit } from "./map";
 import { TouchControls } from "./TouchControls";
-import { GAME_CONSTANTS, JOYSTICK_LAYOUT, TEAM_BRANDING } from "./constants";
+import { GAME_CONSTANTS, JOYSTICK_LAYOUT, TEAM_BRANDING, WEAPON_STATS } from "./constants";
+
+/** Base URL for Kenney assets (Next.js public folder). */
+const KENNEY_ASSET_BASE = "/assets/kenney-topdown-shooter/Spritesheet";
+const KENNEY_TILES_BASE = "/assets/kenney-topdown-shooter/Tilesheet";
+/** Kenney tilesheet tile size (pixels per tile in source image). */
+const TILE_SOURCE_SIZE = 32;
 
 export class GameScene extends Phaser.Scene {
+  private playerSprites: Map<string, Phaser.GameObjects.Sprite> = new Map();
   private playerGraphics: Map<string, Phaser.GameObjects.Graphics> = new Map();
   private playerNames: Map<string, Phaser.GameObjects.Text> = new Map();
   private localPlayerId: string = "";
@@ -12,22 +19,58 @@ export class GameScene extends Phaser.Scene {
   private touchControls?: TouchControls;
   private onAction?: (action: unknown) => void;
   private onHudState?: (state: HudState) => void;
+  /** When set, reload completes at this time (ms, from scene time). */
+  private reloadEndTime: number | null = null;
+  /** Whether Kenney character atlas loaded (fallback to circle if not). */
+  private charactersAtlasLoaded = false;
+  /** Whether Kenney tiles loaded (fallback to procedural floor if not). */
+  private tilesLoaded = false;
+  /** Optional ref for React fire button to trigger shoot. */
+  private fireTriggerRef?: { current: { shoot: () => void } | null };
+  /** Previous frame health for damage flash (local player). */
+  private previousHealth: number = 100;
 
   constructor() {
     super({ key: "GameScene" });
+  }
+
+  preload() {
+    // SFX (optional: game runs without if files missing)
+    this.load.on("loaderror", (_file: unknown) => {
+      // Allow game to continue if SFX fail to load
+    });
+    const sfxBase = "/assets/sfx";
+    this.load.audio("sfx_shoot", [`${sfxBase}/shoot.ogg`, `${sfxBase}/shoot.mp3`]);
+    this.load.audio("sfx_reload", [`${sfxBase}/reload.ogg`, `${sfxBase}/reload.mp3`]);
+    this.load.audio("sfx_hit", [`${sfxBase}/hit.ogg`, `${sfxBase}/hit.mp3`]);
+
+    this.load.atlasXML(
+      "characters",
+      `${KENNEY_ASSET_BASE}/spritesheet_characters.png`,
+      `${KENNEY_ASSET_BASE}/spritesheet_characters.xml`
+    );
+    this.load.spritesheet("tiles", `${KENNEY_TILES_BASE}/tilesheet_complete.png`, {
+      frameWidth: TILE_SOURCE_SIZE,
+      frameHeight: TILE_SOURCE_SIZE,
+    });
   }
 
   init(data: {
     playerId: string;
     onAction: (action: unknown) => void;
     onHudState?: (state: HudState) => void;
+    fireTriggerRef?: { current: { shoot: () => void } | null };
   }) {
     this.localPlayerId = data.playerId;
     this.onAction = data.onAction;
     this.onHudState = data.onHudState;
+    this.fireTriggerRef = data.fireTriggerRef;
   }
 
   create() {
+    this.charactersAtlasLoaded = this.textures.exists("characters");
+    this.tilesLoaded = this.textures.exists("tiles");
+
     // Round pixels so scaled grid lines stay sharp and symmetrical
     this.cameras.main.roundPixels = true;
 
@@ -46,11 +89,19 @@ export class GameScene extends Phaser.Scene {
 
     // Initialize local player for practice mode
     this.initializePracticeMode();
+
+    // Expose shoot-from-button for React fire button
+    if (this.fireTriggerRef) this.fireTriggerRef.current = { shoot: () => this.shootFromButton() };
+  }
+
+  shutdown() {
+    if (this.fireTriggerRef) this.fireTriggerRef.current = null;
   }
 
   private initializePracticeMode() {
     const spawnPos = DEFAULT_MAP.spawns.ethereum[0];
 
+    const weapon = "rifle";
     const localPlayer: Player = {
       id: this.localPlayerId,
       displayName: "You",
@@ -58,7 +109,8 @@ export class GameScene extends Phaser.Scene {
       position: { x: spawnPos.x, y: spawnPos.y },
       health: 100,
       alive: true,
-      weapon: "rifle",
+      weapon,
+      ammoInMagazine: WEAPON_STATS[weapon].magazineSize,
       utilities: [],
       money: 800,
     };
@@ -127,6 +179,14 @@ export class GameScene extends Phaser.Scene {
       });
     }
 
+    // Reload complete check
+    const local = this.gameState.players?.get(this.localPlayerId);
+    if (this.reloadEndTime != null && this.time.now >= this.reloadEndTime && local) {
+      const stats = WEAPON_STATS[local.weapon];
+      local.ammoInMagazine = stats.magazineSize;
+      this.reloadEndTime = null;
+    }
+
     // Push HUD state to React overlay
     this.pushHudState();
   }
@@ -134,6 +194,21 @@ export class GameScene extends Phaser.Scene {
   private pushHudState() {
     if (!this.onHudState || !this.gameState.roundState) return;
     const localPlayer = this.gameState.players?.get(this.localPlayerId);
+    const weapon = localPlayer?.weapon ?? "rifle";
+    const weaponStats = WEAPON_STATS[weapon];
+    const ammoMax = weaponStats.magazineSize;
+    const reloading = this.reloadEndTime != null;
+    const reloadTimeMs = weaponStats.reloadTimeMs;
+    const reloadProgress =
+      reloading && this.reloadEndTime != null
+        ? Math.min(1, Math.max(0, 1 - (this.reloadEndTime - this.time.now) / reloadTimeMs))
+        : undefined;
+    const players = this.gameState.players;
+    const playerPositions =
+      players &&
+      Array.from(players.entries())
+        .filter(([, p]) => p.alive)
+        .map(([id, p]) => ({ id, x: p.position.x, y: p.position.y, team: p.team }));
     this.onHudState({
       roundNumber: this.gameState.roundState.roundNumber,
       phase: this.gameState.roundState.phase,
@@ -141,22 +216,37 @@ export class GameScene extends Phaser.Scene {
       solanaAlive: this.gameState.roundState.solanaAlive,
       bombPlanted: this.gameState.roundState.bombPlanted ?? false,
       health: localPlayer?.health ?? 0,
-      weapon: localPlayer?.weapon ?? "rifle",
+      weapon,
       money: localPlayer?.money ?? 0,
+      ammo: localPlayer?.ammoInMagazine ?? ammoMax,
+      ammoMax,
+      reloading,
+      reloadProgress,
+      localPlayerPosition: localPlayer?.alive ? localPlayer.position : undefined,
+      playerPositions,
     });
   }
 
   private drawMap() {
-    const graphics = this.add.graphics();
     const { width, height } = DEFAULT_MAP;
     const step = GAME_CONSTANTS.GRID_SIZE;
 
-    // Base floor – dark tactical green/grey
-    graphics.fillStyle(0x1e2a1e);
-    graphics.fillRect(0, 0, width, height);
+    // Base floor – Kenney tiles if loaded, else procedural (Base palette dark)
+    if (this.tilesLoaded && this.textures.get("tiles").get(0)) {
+      const floor = this.add.tileSprite(0, 0, width, height, "tiles", 0);
+      floor.setOrigin(0, 0);
+      floor.setTileScale(step / TILE_SOURCE_SIZE);
+      floor.setDepth(0);
+    }
 
-    // Symmetrical grid: same step in X and Y, drawn in two batched paths so lines align evenly
-    graphics.lineStyle(1, 0x2a3a2a, 0.6);
+    const graphics = this.add.graphics();
+    if (!this.tilesLoaded) {
+      graphics.fillStyle(0x0a0a0f);
+      graphics.fillRect(0, 0, width, height);
+    }
+
+    // Grid overlay (subtle)
+    graphics.lineStyle(1, 0x2a3a2a, 0.5);
     for (let x = 0; x <= width; x += step) {
       graphics.moveTo(x, 0);
       graphics.lineTo(x, height);
@@ -168,14 +258,14 @@ export class GameScene extends Phaser.Scene {
     }
     graphics.strokePath();
 
-    // Bomb site A – filled zone + border
-    graphics.fillStyle(0x0088ff, 0.2);
+    // Bomb site A (ETH) – filled zone + border
+    graphics.fillStyle(TEAM_BRANDING.ethereum.colorHex, 0.2);
     graphics.fillCircle(
       DEFAULT_MAP.siteA.x,
       DEFAULT_MAP.siteA.y,
       DEFAULT_MAP.siteA.radius
     );
-    graphics.lineStyle(4, 0x0088ff);
+    graphics.lineStyle(4, TEAM_BRANDING.ethereum.colorHex);
     graphics.strokeCircle(
       DEFAULT_MAP.siteA.x,
       DEFAULT_MAP.siteA.y,
@@ -185,18 +275,18 @@ export class GameScene extends Phaser.Scene {
       DEFAULT_MAP.siteA.x - 15,
       DEFAULT_MAP.siteA.y - 10,
       "A",
-      { fontSize: "24px", color: "#0088ff" }
+      { fontSize: "24px", color: TEAM_BRANDING.ethereum.colorCss }
     );
     labelA.setDepth(1);
 
-    // Bomb site B – filled zone + border
-    graphics.fillStyle(0xff8800, 0.2);
+    // Bomb site B (SOL) – filled zone + border
+    graphics.fillStyle(TEAM_BRANDING.solana.colorHex, 0.2);
     graphics.fillCircle(
       DEFAULT_MAP.siteB.x,
       DEFAULT_MAP.siteB.y,
       DEFAULT_MAP.siteB.radius
     );
-    graphics.lineStyle(4, 0xff8800);
+    graphics.lineStyle(4, TEAM_BRANDING.solana.colorHex);
     graphics.strokeCircle(
       DEFAULT_MAP.siteB.x,
       DEFAULT_MAP.siteB.y,
@@ -206,7 +296,7 @@ export class GameScene extends Phaser.Scene {
       DEFAULT_MAP.siteB.x - 15,
       DEFAULT_MAP.siteB.y - 10,
       "B",
-      { fontSize: "24px", color: "#ff8800" }
+      { fontSize: "24px", color: TEAM_BRANDING.solana.colorCss }
     );
     labelB.setDepth(1);
 
@@ -221,16 +311,57 @@ export class GameScene extends Phaser.Scene {
     graphics.setDepth(0);
   }
 
+  /** Called when user taps canvas (except joystick). */
   private handleShoot(pointer: Phaser.Input.Pointer) {
-    if (!this.gameState.players) return;
-
-    const localPlayer = this.gameState.players.get(this.localPlayerId);
+    const localPlayer = this.gameState.players?.get(this.localPlayerId);
     if (!localPlayer || !localPlayer.alive) return;
 
-    const angle = Math.atan2(
-      pointer.worldY - localPlayer.position.y,
-      pointer.worldX - localPlayer.position.x
-    );
+    const from = localPlayer.position;
+    const tap = { x: pointer.worldX, y: pointer.worldY };
+    const wallHit = getFirstWallHit(from, tap);
+    const end = wallHit ?? tap;
+    const angle = Math.atan2(tap.y - from.y, tap.x - from.x);
+    this.doShoot(angle, from, end);
+  }
+
+  /** Called when React fire button is pressed; aim toward screen center. */
+  shootFromButton() {
+    const localPlayer = this.gameState.players?.get(this.localPlayerId);
+    if (!localPlayer || !localPlayer.alive) return;
+
+    const cam = this.cameras.main;
+    const centerX = cam.scrollX + cam.width / 2 / cam.zoom;
+    const centerY = cam.scrollY + cam.height / 2 / cam.zoom;
+    const from = localPlayer.position;
+    const tap = { x: centerX, y: centerY };
+    const wallHit = getFirstWallHit(from, tap);
+    const end = wallHit ?? tap;
+    const angle = Math.atan2(tap.y - from.y, tap.x - from.x);
+    this.doShoot(angle, from, end);
+  }
+
+  private doShoot(
+    angle: number,
+    from: { x: number; y: number },
+    end: { x: number; y: number }
+  ) {
+    const localPlayer = this.gameState.players?.get(this.localPlayerId);
+    if (!localPlayer || !localPlayer.alive) return;
+
+    if (this.reloadEndTime != null) return;
+    if (localPlayer.ammoInMagazine <= 0) {
+      this.playSfx("sfx_reload");
+      this.reloadEndTime = this.time.now + WEAPON_STATS[localPlayer.weapon].reloadTimeMs;
+      return;
+    }
+
+    localPlayer.ammoInMagazine -= 1;
+    if (localPlayer.ammoInMagazine === 0) {
+      this.playSfx("sfx_reload");
+      this.reloadEndTime = this.time.now + WEAPON_STATS[localPlayer.weapon].reloadTimeMs;
+    }
+
+    this.playSfx("sfx_shoot");
 
     this.emitAction({
       type: "shoot",
@@ -240,12 +371,26 @@ export class GameScene extends Phaser.Scene {
       tick: this.gameState.tickNumber || 0,
     });
 
-    // Visual feedback: clip tracer at first wall so shot doesn't appear to go through walls
-    const from = localPlayer.position;
-    const tap = { x: pointer.worldX, y: pointer.worldY };
-    const wallHit = getFirstWallHit(from, tap);
-    const end = wallHit ?? tap;
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(10);
+    }
+
     this.drawBulletTracer(from, end);
+    this.muzzleFlash(from);
+    this.cameras.main.shake(80, 0.004);
+    this.hitSparks(end);
+    this.playSfx("sfx_hit");
+  }
+
+  /** Play SFX by key if loaded (no-op if missing). */
+  private playSfx(key: string) {
+    try {
+      if (this.cache.audio.exists(key)) {
+        this.sound.play(key, { volume: 0.4 });
+      }
+    } catch {
+      // ignore
+    }
   }
 
   private drawBulletTracer(from: { x: number; y: number }, to: { x: number; y: number }) {
@@ -255,9 +400,62 @@ export class GameScene extends Phaser.Scene {
     line.moveTo(from.x, from.y);
     line.lineTo(to.x, to.y);
     line.strokePath();
+    line.setDepth(5);
+    this.time.delayedCall(50, () => line.destroy());
+  }
 
-    this.time.delayedCall(50, () => {
-      line.destroy();
+  private muzzleFlash(at: { x: number; y: number }) {
+    const flash = this.add.graphics();
+    flash.fillStyle(0xffffff, 0.9);
+    flash.fillCircle(at.x, at.y, 12);
+    flash.setDepth(6);
+    this.tweens.add({
+      targets: flash,
+      alpha: 0,
+      scale: 1.5,
+      duration: 60,
+      ease: "Cubic.Out",
+      onComplete: () => flash.destroy(),
+    });
+  }
+
+  private hitSparks(at: { x: number; y: number }) {
+    for (let i = 0; i < 4; i++) {
+      const angle = (Math.PI * 2 * i) / 4 + Math.random() * 0.5;
+      const dist = 8 + Math.random() * 12;
+      const x = at.x + Math.cos(angle) * dist;
+      const y = at.y + Math.sin(angle) * dist;
+      const dot = this.add.graphics();
+      dot.fillStyle(0xffaa00, 0.9);
+      dot.fillCircle(x, y, 2);
+      dot.setDepth(6);
+      this.tweens.add({
+        targets: dot,
+        alpha: 0,
+        x: x + Math.cos(angle) * 15,
+        y: y + Math.sin(angle) * 15,
+        duration: 120,
+        ease: "Cubic.Out",
+        onComplete: () => dot.destroy(),
+      });
+    }
+  }
+
+  /** Red full-screen flash when local player takes damage (covers camera viewport). */
+  private damageFlash() {
+    const cam = this.cameras.main;
+    const w = cam.width;
+    const h = cam.height;
+    const g = this.add.graphics();
+    g.fillStyle(0xff0000, 0.4);
+    g.fillRect(cam.scrollX, cam.scrollY, w / cam.zoom, h / cam.zoom);
+    g.setDepth(100);
+    this.tweens.add({
+      targets: g,
+      alpha: 0,
+      duration: 250,
+      ease: "Cubic.Out",
+      onComplete: () => g.destroy(),
     });
   }
 
@@ -283,48 +481,59 @@ export class GameScene extends Phaser.Scene {
   }
 
   private renderPlayers(players: Map<string, Player>) {
-    // Clear old graphics and text
-    this.playerGraphics.forEach((graphics) => graphics.destroy());
+    this.playerSprites.forEach((s) => s.destroy());
+    this.playerSprites.clear();
+    this.playerGraphics.forEach((g) => g.destroy());
     this.playerGraphics.clear();
     this.playerNames.forEach((text) => text.destroy());
     this.playerNames.clear();
 
-    // Draw new players
+    const frame = this.charactersAtlasLoaded ? "soldier1_stand.png" : null;
+    const getColor = (p: Player) =>
+      p.team === "ethereum" ? TEAM_BRANDING.ethereum.colorHex : TEAM_BRANDING.solana.colorHex;
+
     players.forEach((player, id) => {
       if (!player.alive) return;
 
-      const graphics = this.add.graphics();
-      const color =
-        player.team === "ethereum" ? TEAM_BRANDING.ethereum.colorHex : TEAM_BRANDING.solana.colorHex;
+      if (frame && this.textures.get("characters").get(frame)) {
+        const sprite = this.add.sprite(
+          player.position.x,
+          player.position.y,
+          "characters",
+          frame
+        );
+        sprite.setOrigin(0.5, 0.5);
+        sprite.setTint(getColor(player));
+        sprite.setScale(0.7);
+        sprite.setDepth(2);
+        this.playerSprites.set(id, sprite);
+      }
 
-      graphics.fillStyle(color);
-      graphics.fillCircle(player.position.x, player.position.y, 15);
-
-      // Health bar background
-      graphics.fillStyle(0x000000);
-      graphics.fillRect(player.position.x - 20, player.position.y - 30, 40, 5);
-      // Health bar fill
-      graphics.fillStyle(0x00ff00);
-      graphics.fillRect(
+      const g = this.add.graphics();
+      if (!frame || !this.textures.get("characters").get(frame)) {
+        g.fillStyle(getColor(player));
+        g.fillCircle(player.position.x, player.position.y, 15);
+      }
+      g.fillStyle(0x000000);
+      g.fillRect(player.position.x - 20, player.position.y - 30, 40, 5);
+      g.fillStyle(0x22c55e);
+      g.fillRect(
         player.position.x - 20,
         player.position.y - 30,
         (40 * player.health) / 100,
         5
       );
+      g.setDepth(3);
+      this.playerGraphics.set(id, g);
 
-      // Name
       const nameText = this.add.text(
         player.position.x,
         player.position.y - 40,
         player.displayName,
-        {
-          fontSize: "12px",
-          color: "#ffffff",
-        }
+        { fontSize: "12px", color: "#ffffff" }
       );
       nameText.setOrigin(0.5, 0.5);
-
-      this.playerGraphics.set(id, graphics);
+      nameText.setDepth(3);
       this.playerNames.set(id, nameText);
     });
   }

@@ -2,15 +2,20 @@
  * Demo: Open the app in a visible browser and play the game so you can watch.
  * Run: npx playwright test e2e/demo-play.spec.ts
  */
-import { test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
 test("open and play game for viewing", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("heading", { name: /BaseRift/i }).waitFor({ state: "visible" });
-  await page.getByText(/Drag joystick to move/).first().waitFor({ state: "visible" });
+  await page.getByText(/Joystick: move/).first().waitFor({ state: "visible" });
 
   const gameArea = page.locator(".game-container").first();
   await gameArea.waitFor({ state: "visible" });
+  // HUD: scorebar, health, weapon visible after game loads
+  await expect(page.getByText(/Round \d+/).first()).toBeVisible({ timeout: 5000 });
+  await expect(page.getByText(/Health/).first()).toBeVisible();
+  await expect(page.getByText(/Rifle|Pistol|Shotgun/).first()).toBeVisible();
+
   await gameArea.click({ position: { x: 400, y: 300 } });
 
   const move = async (key: string, ms: number) => {
@@ -29,5 +34,5 @@ test("open and play game for viewing", async ({ page }) => {
   await move("w", 600);
   await page.mouse.click(550, 380);
 
-  await page.waitForTimeout(25000);
+  await page.waitForTimeout(2000);
 });

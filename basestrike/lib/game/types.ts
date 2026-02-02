@@ -12,6 +12,8 @@ export interface Player {
   health: number;
   alive: boolean;
   weapon: "pistol" | "rifle" | "shotgun";
+  /** Current ammo in current magazine. */
+  ammoInMagazine: number;
   utilities: Array<"flashbang" | "smoke">;
   money: number;
 }
@@ -78,6 +80,18 @@ export interface HudState {
   health: number;
   weapon: "pistol" | "rifle" | "shotgun";
   money: number;
+  /** Current ammo in magazine (for WeaponHUD). */
+  ammo: number;
+  /** Max ammo per magazine (for WeaponHUD). */
+  ammoMax: number;
+  /** True while reloading (for WeaponHUD). */
+  reloading?: boolean;
+  /** Reload progress 0–1 while reloading (for progress bar). */
+  reloadProgress?: number;
+  /** Local player position for minimap. */
+  localPlayerPosition?: { x: number; y: number };
+  /** Other player positions for minimap (id, x, y, team). */
+  playerPositions?: Array<{ id: string; x: number; y: number; team: TeamId }>;
 }
 
 export type { PlayerAction, RoundState };

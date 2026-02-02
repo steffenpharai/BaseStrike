@@ -8,12 +8,18 @@ export * from "./schemas";
 export * from "./constants";
 export { GameScene };
 
+export interface FireTrigger {
+  shoot: () => void;
+}
+
 export function createGame(
   container: HTMLElement,
   config: {
     playerId: string;
     onAction: (action: unknown) => void;
     onHudState?: (state: import("./types").HudState) => void;
+    /** Optional: set by GameScene so React can trigger shoot (e.g. fire button). */
+    fireTriggerRef?: { current: FireTrigger | null };
   }
 ): Phaser.Game {
   const gameConfig: Phaser.Types.Core.GameConfig = {

@@ -1,19 +1,26 @@
 /* OnchainKit first so its @import (Google Fonts) stays at top of compiled CSS */
 @import "@coinbase/onchainkit/styles.css";
+@import "@fontsource/inter/latin-400.css";
+@import "@fontsource/inter/latin-600.css";
 @import "tailwindcss";
 
-/* Semantic color tokens (Base design guidelines: primary, background, foreground; enables future light/dark). */
-:root {
-  --font-sans: "Inter", system-ui, sans-serif;
-  --color-primary: #3b82f6;
-  --color-primary-hover: #2563eb;
-  --color-primary-active: #1d4ed8;
-  --color-background: #0a0a0a;
+/* Tailwind v4 @theme: design tokens for bg-primary, text-primary, etc. (Base palette, WCAG AA+). */
+@theme {
+  --color-primary: #0f6cdf;
+  --color-primary-hover: #0d5bc7;
+  --color-primary-active: #0a4aaf;
+  --color-secondary: #6366f1;
+  --color-background: #0a0a0f;
+  --color-background-alt: #1a1a2e;
   --color-foreground: #ededed;
   --color-muted: #9ca3af;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+/* Semantic aliases and motion (non-utility). */
+:root {
   --background: var(--color-background);
   --foreground: var(--color-foreground);
-  /* Base motion: snappy 120–240ms, cubic-bezier(0.4, 0, 0.2, 1) — intention-first, tech-positive polish */
   --ease-base: cubic-bezier(0.4, 0, 0.2, 1);
   --duration-fast: 120ms;
   --duration-snappy: 200ms;

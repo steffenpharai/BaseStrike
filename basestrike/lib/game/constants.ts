@@ -16,23 +16,23 @@ export const GAME_CONSTANTS = {
 
 /**
  * Virtual joystick layout (industry-standard: fixed base, left movement zone, above HUD bar).
- * Position and radius must match TouchControls and GameScene guard/zone.
+ * Position and radius must match TouchControls and GameScene guard/zone. 60px+ for thumb reach.
  */
 export const JOYSTICK_LAYOUT = {
   /** Horizontal margin from left edge (px). Centered in second grid cell (GRID_SIZE=80 → center at 120). */
   MARGIN_LEFT: 120,
   /** Vertical margin from bottom edge so joystick sits above HUD bottom bar (px). */
   MARGIN_BOTTOM: 200,
-  /** Base circle radius (≥44px touch target; industry-standard size). */
-  BASE_RADIUS: 56,
+  /** Base circle radius (≥60px touch target; Base design guidelines). */
+  BASE_RADIUS: 60,
   /** Thumb/handle radius. */
-  THUMB_RADIUS: 26,
+  THUMB_RADIUS: 28,
   /** Max distance thumb moves from center (stick travel). */
-  THUMB_TRAVEL: 32,
+  THUMB_TRAVEL: 34,
 } as const;
 
 /**
- * Weapon Stats
+ * Weapon Stats (magazineSize and reloadTimeMs for HUD ammo display).
  */
 export const WEAPON_STATS = {
   pistol: {
@@ -40,18 +40,24 @@ export const WEAPON_STATS = {
     fireRate: 300, // ms
     cost: 0, // free starter weapon
     range: 300,
+    magazineSize: 12,
+    reloadTimeMs: 1200,
   },
   rifle: {
     damage: 35,
     fireRate: 150,
     cost: 200,
     range: 500,
+    magazineSize: 30,
+    reloadTimeMs: 2000,
   },
   shotgun: {
     damage: 80,
     fireRate: 800,
     cost: 150,
     range: 150,
+    magazineSize: 8,
+    reloadTimeMs: 2500,
   },
 } as const;
 
@@ -91,21 +97,21 @@ export const NETWORK_CONSTANTS = {
 /**
  * Team branding: Ethereum vs Solana (Base Mini App gameplay theme).
  * Team 1 = Ethereum (defuses bomb); Team 2 = Solana (plants bomb).
- * Colors from official brand guidelines (Ethereum blue-purple, Solana green).
+ * ETH blue, SOL orange for high contrast and WCAG AA+.
  */
 export const TEAM_BRANDING = {
   ethereum: {
     name: "Ethereum",
     shortName: "ETH",
-    /** Ethereum brand blue-purple (#627EEA) for in-game player tint and HUD. */
-    colorHex: 0x627eea,
-    colorCss: "#627EEA",
+    /** Primary blue (#0F6CDF) for in-game player tint and HUD. */
+    colorHex: 0x0f6cdf,
+    colorCss: "#0F6CDF",
   },
   solana: {
     name: "Solana",
     shortName: "SOL",
-    /** Solana brand green (#14F195) for in-game player tint and HUD. */
-    colorHex: 0x14f195,
-    colorCss: "#14F195",
+    /** Orange accent (#F97316) for in-game player tint and HUD. */
+    colorHex: 0xf97316,
+    colorCss: "#F97316",
   },
 } as const;

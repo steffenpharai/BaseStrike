@@ -4,8 +4,11 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { sdk, quickAuth } from "@farcaster/miniapp-sdk";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
-import { Wallet } from "@coinbase/onchainkit/wallet";
 import { BaseRiftLogo } from "@/components/BaseRiftLogo";
+import { BottomNav, type TabId } from "@/components/BottomNav";
+import { HeaderWallet } from "@/components/HeaderWallet";
+import { LeaderboardModal } from "@/components/LeaderboardModal";
+import { TutorialPopups } from "@/components/TutorialPopups";
 
 const BETA_CAP = 100;
 
@@ -14,7 +17,7 @@ type BetaSignupState = "idle" | "loading" | "joined" | "already" | "full" | "err
 
 const GameContainer = dynamic(
   () => import("@/components/GameContainer").then(mod => ({ default: mod.GameContainer })),
-  { ssr: false, loading: () => <div className="w-full h-full min-h-[120px] bg-gray-800 animate-pulse rounded-lg flex flex-col items-center justify-center gap-2" aria-busy aria-label="Loading game"><span className="text-gray-500 text-sm">Loading…</span></div> }
+  { ssr: false }
 );
 
 /** User display name only (Product: no 0x addresses). */
@@ -28,7 +31,8 @@ export default function Home() {
   const { setMiniAppReady, isMiniAppReady, context } = useMiniKit();
   const [playerId] = useState(() => `player_${Math.random().toString(36).substr(2, 9)}`);
   const [matchId] = useState(() => `match_${Date.now()}`);
-  const [activeTab, setActiveTab] = useState<"play" | "ranked" | "profile">("play");
+  const [activeTab, setActiveTab] = useState<TabId>("play");
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [betaStatus, setBetaStatus] = useState<BetaStatus>(null);
   const [betaSignupState, setBetaSignupState] = useState<BetaSignupState>("idle");
 
@@ -88,80 +92,41 @@ export default function Home() {
   const displayName = userDisplayName(user?.displayName, user?.username);
 
   return (
-    <div className="h-dvh w-full min-w-0 max-w-full overflow-hidden bg-gray-900 text-white flex flex-col font-sans safe-area-top safe-area-x">
-      {/* Compact Header — Product: show avatar + username (no 0x). Base: small viewports. */}
-      <header className="bg-gray-800/80 backdrop-blur-sm border-b border-gray-700 px-4 py-3 flex-shrink-0">
+    <div className="h-dvh w-full min-w-0 max-w-full overflow-hidden bg-[var(--color-background)] text-white flex flex-col font-sans safe-area-top safe-area-x">
+      {/* Compact Header — avatar + username (no 0x); subtle. */}
+      <header className="bg-[var(--color-background-alt)]/90 backdrop-blur-sm border-b border-white/10 px-3 py-2 flex-shrink-0">
         <div className="flex items-center justify-between w-full">
           <h1 className="flex items-center min-h-[44px]">
             <BaseRiftLogo variant="full" animated />
           </h1>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 min-h-[44px] touch-target">
-              {user?.pfpUrl ? (
-                <span className="relative w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-700">
-                  <Image
-                    src={user.pfpUrl}
-                    alt=""
-                    width={32}
-                    height={32}
-                    className="object-cover w-full h-full"
-                    unoptimized
-                  />
-                </span>
-              ) : (
-                <span className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm font-medium text-gray-300 flex-shrink-0" aria-hidden>
-                  {displayName.charAt(0).toUpperCase()}
-                </span>
-              )}
-              <span className="text-sm text-gray-400 truncate max-w-[100px]" title={displayName}>
-                {displayName}
-              </span>
-            </div>
-            <Wallet />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setLeaderboardOpen(true)}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-gray-400 hover:text-[var(--color-primary)] touch-target"
+              aria-label="Leaderboard"
+            >
+              <span className="text-xl" aria-hidden>🏆</span>
+            </button>
+            <HeaderWallet user={user} displayName={displayName} />
           </div>
         </div>
       </header>
+      <LeaderboardModal open={leaderboardOpen} onClose={() => setLeaderboardOpen(false)} />
 
       {/* Main Content — no scroll; fills viewport; Base: core actions visible, full viewport. */}
       <main className="flex-1 min-h-0 overflow-hidden flex flex-col p-2 main-content-pb">
         <div className="flex-1 min-h-0 min-w-0 w-full flex flex-col">
         {activeTab === "play" && (
-          <div className="flex-1 min-h-0 flex flex-col gap-2">
-            {/* Play hero: viral, game-like strip (Building for the Base App — simple, shareable, low friction). */}
-            <section
-              className="flex-shrink-0 rounded-xl bg-gray-800/90 px-3 py-3 border border-gray-600/80 play-hero-entrance relative overflow-hidden"
-              aria-label="How to play"
-            >
-              {/* Subtle top-edge glow */}
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent play-hero-glow pointer-events-none" aria-hidden />
-              <div className="relative flex flex-col gap-2">
-                <div className="flex items-center justify-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 text-[10px] font-bold uppercase tracking-wider border border-blue-400/30">
-                    Beta
-                  </span>
-                  {betaStatus != null && !betaStatus.full && (
-                    <span className="play-hero-spots-pulse text-[10px] text-gray-400 font-medium" aria-live="polite">
-                      {betaStatus.count}/{betaStatus.cap} testers
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm font-semibold text-white text-center leading-snug">
-                  Tactical shooter on Base. Move, aim, shoot—climb the ranks.
-                </p>
-                <p className="text-xs text-gray-400 text-center">
-                  Joystick: move · Tap: shoot
-                </p>
-                {betaStatus != null && !betaStatus.full && (
-                  <p className="text-[10px] text-gray-500 text-center">
-                    First 100 get early access · Join in Profile
-                  </p>
-                )}
-              </div>
-            </section>
-
-            {/* Game Canvas — fills remaining viewport on all mobile devices. */}
-            <div className="flex-1 min-h-0 min-w-0 rounded-xl overflow-hidden bg-gray-800">
+          <div className="flex-1 min-h-0 flex flex-col">
+            {/* Slim one-line hint; game fills rest (85%+). */}
+            <p className="flex-shrink-0 text-[10px] text-center text-gray-500 py-1 px-2" aria-label="How to play">
+              Live: Climb Ranks · Joystick: move · Tap: shoot
+            </p>
+            {/* Game Canvas — fills remaining viewport; tutorial overlays when first visit. */}
+            <div className="flex-1 min-h-0 min-w-0 rounded-xl overflow-hidden bg-[var(--color-background-alt)] relative">
               <GameContainer playerId={playerId} matchId={matchId} onAction={handleAction} />
+              <TutorialPopups />
             </div>
           </div>
         )}
@@ -253,29 +218,7 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Bottom Navigation — Base: bottom nav, labels under icons, 44px touch, safe area. */}
-      <nav className="flex-shrink-0 bg-gray-800/95 backdrop-blur-sm border-t border-gray-700 safe-area-x safe-area-pb">
-        <div className="flex justify-around w-full px-2 py-2">
-          {[
-            { id: "play" as const, icon: "🎮", label: "Play" },
-            { id: "ranked" as const, icon: "🏆", label: "Ranked" },
-            { id: "profile" as const, icon: "👤", label: "Profile" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-col items-center justify-center min-w-[64px] min-h-[44px] px-4 py-2 rounded-lg transition-colors touch-target ${
-                activeTab === tab.id
-                  ? "text-blue-400 bg-blue-500/10"
-                  : "text-gray-400 active:text-white active:bg-gray-700"
-              }`}
-            >
-              <span className="text-xl" aria-hidden>{tab.icon}</span>
-              <span className="text-xs mt-0.5">{tab.label}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 }
