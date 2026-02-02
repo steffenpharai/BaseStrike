@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { div as MotionDiv } from "framer-motion/client";
-import { createGame, GAME_CONSTANTS, type FireTrigger } from "@/lib/game";
+import { createGame, GAME_CONSTANTS } from "@/lib/game";
 import type { HudState } from "@/lib/game/types";
 import type Phaser from "phaser";
 import { GameHud } from "@/components/GameHud";
@@ -19,9 +19,11 @@ interface GameContainerProps {
   playerId: string;
   matchId: string;
   onAction: (action: unknown) => void;
+  /** Team from onboarding flow (ethereum | solana). */
+  team?: "ethereum" | "solana";
 }
 
-export function GameContainer({ playerId, matchId: _matchId, onAction }: GameContainerProps) {
+export function GameContainer({ playerId, matchId: _matchId, onAction, team }: GameContainerProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
@@ -30,7 +32,6 @@ export function GameContainer({ playerId, matchId: _matchId, onAction }: GameCon
   const [gameSize, setGameSize] = useState<{ width: number; height: number } | null>(null);
   const [hudState, setHudState] = useState<HudState | null>(null);
   const onHudState = useCallback((state: HudState) => setHudState(state), []);
-  const fireTriggerRef = useRef<FireTrigger | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -62,7 +63,7 @@ export function GameContainer({ playerId, matchId: _matchId, onAction }: GameCon
       playerId,
       onAction,
       onHudState,
-      fireTriggerRef,
+      team,
     });
 
     return () => {
@@ -71,7 +72,7 @@ export function GameContainer({ playerId, matchId: _matchId, onAction }: GameCon
         gameRef.current = null;
       }
     };
-  }, [mounted, gameSize, playerId, onAction, onHudState]);
+  }, [mounted, gameSize, playerId, onAction, onHudState, team]);
 
   if (!mounted) {
     return (
@@ -140,19 +141,6 @@ export function GameContainer({ playerId, matchId: _matchId, onAction }: GameCon
             </button>
           </div>
         )}
-        {/* Optional fire button (60px, bottom-right); pointer-events so it receives taps. */}
-        <button
-          type="button"
-          aria-label="Fire"
-          className="absolute bottom-4 right-4 z-20 flex h-[60px] w-[60px] items-center justify-center rounded-full border-2 border-white/30 bg-black/50 backdrop-blur-sm text-white/90 touch-target active:scale-95 active:bg-black/70 transition-transform"
-          style={{ minWidth: 60, minHeight: 60 }}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            fireTriggerRef.current?.shoot();
-          }}
-        >
-          <span className="text-xl font-bold" aria-hidden>🔥</span>
-        </button>
       </div>
     </MotionDiv>
   );

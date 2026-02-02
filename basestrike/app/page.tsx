@@ -9,6 +9,8 @@ import { BottomNav, type TabId } from "@/components/BottomNav";
 import { HeaderWallet } from "@/components/HeaderWallet";
 import { LeaderboardModal } from "@/components/LeaderboardModal";
 import { TutorialPopups } from "@/components/TutorialPopups";
+import FlowManager from "@/components/Flow/FlowManager";
+import { useGameFlowStore, teamToGameTeam } from "@/lib/stores/gameFlowStore";
 
 const BETA_CAP = 100;
 
@@ -29,6 +31,9 @@ function userDisplayName(displayName?: string | null, username?: string | null):
 
 export default function Home() {
   const { setMiniAppReady, isMiniAppReady, context } = useMiniKit();
+  const flowStage = useGameFlowStore((s) => s.stage);
+  const team = useGameFlowStore((s) => s.team);
+  const resetToTeamSelect = useGameFlowStore((s) => s.resetToTeamSelect);
   const [playerId] = useState(() => `player_${Math.random().toString(36).substr(2, 9)}`);
   const [matchId] = useState(() => `match_${Date.now()}`);
   const [activeTab, setActiveTab] = useState<TabId>("play");
@@ -90,46 +95,64 @@ export default function Home() {
 
   const user = context?.user;
   const displayName = userDisplayName(user?.displayName, user?.username);
+  const gameTeam = team ? teamToGameTeam(team) : undefined;
 
   return (
     <div className="h-dvh w-full min-w-0 max-w-full overflow-hidden bg-[var(--color-background)] text-white flex flex-col font-sans safe-area-top safe-area-x">
-      {/* Compact Header — avatar + username (no 0x); subtle. */}
-      <header className="bg-[var(--color-background-alt)]/90 backdrop-blur-sm border-b border-white/10 px-3 py-2 flex-shrink-0">
-        <div className="flex items-center justify-between w-full">
-          <h1 className="flex items-center min-h-[44px]">
-            <BaseRiftLogo variant="full" animated />
-          </h1>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setLeaderboardOpen(true)}
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-gray-400 hover:text-[var(--color-primary)] touch-target"
-              aria-label="Leaderboard"
-            >
-              <span className="text-xl" aria-hidden>🏆</span>
-            </button>
-            <HeaderWallet user={user} displayName={displayName} />
-          </div>
+      {flowStage !== "game" && (
+        <div className="absolute inset-0 z-10 flex flex-col bg-gradient-to-b from-[#0A0A0F] to-[#1A1A2E]">
+          <FlowManager />
         </div>
-      </header>
-      <LeaderboardModal open={leaderboardOpen} onClose={() => setLeaderboardOpen(false)} />
+      )}
 
-      {/* Main Content — no scroll; fills viewport; Base: core actions visible, full viewport. */}
-      <main className="flex-1 min-h-0 overflow-hidden flex flex-col p-2 main-content-pb">
-        <div className="flex-1 min-h-0 min-w-0 w-full flex flex-col">
-        {activeTab === "play" && (
-          <div className="flex-1 min-h-0 flex flex-col">
-            {/* Slim one-line hint; game fills rest (85%+). */}
-            <p className="flex-shrink-0 text-[10px] text-center text-gray-500 py-1 px-2" aria-label="How to play">
-              Live: Climb Ranks · Joystick: move · Tap: shoot
-            </p>
-            {/* Game Canvas — fills remaining viewport; tutorial overlays when first visit. */}
-            <div className="flex-1 min-h-0 min-w-0 rounded-xl overflow-hidden bg-[var(--color-background-alt)] relative">
-              <GameContainer playerId={playerId} matchId={matchId} onAction={handleAction} />
-              <TutorialPopups />
+      {flowStage === "game" && (
+        <>
+          <header className="bg-[var(--color-background-alt)]/90 backdrop-blur-sm border-b border-white/10 px-3 py-2 flex-shrink-0">
+            <div className="flex items-center justify-between w-full">
+              <h1 className="flex items-center min-h-[44px]">
+                <BaseRiftLogo variant="full" animated />
+              </h1>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setLeaderboardOpen(true)}
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-gray-400 hover:text-[var(--color-primary)] touch-target"
+                  aria-label="Leaderboard"
+                >
+                  <span className="text-xl" aria-hidden>🏆</span>
+                </button>
+                <HeaderWallet user={user} displayName={displayName} />
+              </div>
             </div>
-          </div>
-        )}
+          </header>
+          <LeaderboardModal open={leaderboardOpen} onClose={() => setLeaderboardOpen(false)} />
+
+          <main className="flex-1 min-h-0 overflow-hidden flex flex-col p-2 main-content-pb">
+            <div className="flex-1 min-h-0 min-w-0 w-full flex flex-col">
+              {activeTab === "play" && (
+                <div className="flex-1 min-h-0 flex flex-col">
+                  <p className="flex-shrink-0 text-[10px] text-center text-gray-500 py-1 px-2" aria-label="How to play">
+                    Live: Climb Ranks · Joystick: move · Tap: shoot
+                  </p>
+                  <div className="flex-1 min-h-0 min-w-0 rounded-xl overflow-hidden bg-[var(--color-background-alt)] relative">
+                    <GameContainer
+                      playerId={playerId}
+                      matchId={matchId}
+                      onAction={handleAction}
+                      team={gameTeam}
+                    />
+                    <TutorialPopups />
+                    <button
+                      type="button"
+                      onClick={resetToTeamSelect}
+                      className="absolute top-2 left-2 z-20 min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border border-white/20 bg-black/40 text-white/90 touch-target text-sm"
+                      aria-label="Leave match"
+                    >
+                      ← Leave
+                    </button>
+                  </div>
+                </div>
+              )}
 
         {activeTab === "ranked" && (
           <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-4 bg-gray-800 rounded-xl">
@@ -215,10 +238,11 @@ export default function Home() {
             )}
           </div>
         )}
-        </div>
-      </main>
-
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+              </div>
+            </main>
+            <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+          </>
+        )}
     </div>
   );
 }

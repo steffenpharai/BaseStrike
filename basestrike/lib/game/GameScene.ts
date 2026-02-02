@@ -25,10 +25,10 @@ export class GameScene extends Phaser.Scene {
   private charactersAtlasLoaded = false;
   /** Whether Kenney tiles loaded (fallback to procedural floor if not). */
   private tilesLoaded = false;
-  /** Optional ref for React fire button to trigger shoot. */
-  private fireTriggerRef?: { current: { shoot: () => void } | null };
   /** Previous frame health for damage flash (local player). */
   private previousHealth: number = 100;
+  /** Team from onboarding flow (ethereum | solana). */
+  private flowTeam: "ethereum" | "solana" = "ethereum";
 
   constructor() {
     super({ key: "GameScene" });
@@ -59,12 +59,12 @@ export class GameScene extends Phaser.Scene {
     playerId: string;
     onAction: (action: unknown) => void;
     onHudState?: (state: HudState) => void;
-    fireTriggerRef?: { current: { shoot: () => void } | null };
+    team?: "ethereum" | "solana";
   }) {
     this.localPlayerId = data.playerId;
     this.onAction = data.onAction;
     this.onHudState = data.onHudState;
-    this.fireTriggerRef = data.fireTriggerRef;
+    this.flowTeam = data.team ?? "ethereum";
   }
 
   create() {
@@ -89,23 +89,18 @@ export class GameScene extends Phaser.Scene {
 
     // Initialize local player for practice mode
     this.initializePracticeMode();
-
-    // Expose shoot-from-button for React fire button
-    if (this.fireTriggerRef) this.fireTriggerRef.current = { shoot: () => this.shootFromButton() };
-  }
-
-  shutdown() {
-    if (this.fireTriggerRef) this.fireTriggerRef.current = null;
   }
 
   private initializePracticeMode() {
-    const spawnPos = DEFAULT_MAP.spawns.ethereum[0];
+    const team = this.flowTeam;
+    const spawns = DEFAULT_MAP.spawns[team];
+    const spawnPos = spawns[0]!;
 
     const weapon = "rifle";
     const localPlayer: Player = {
       id: this.localPlayerId,
       displayName: "You",
-      team: "ethereum",
+      team,
       position: { x: spawnPos.x, y: spawnPos.y },
       health: 100,
       alive: true,
@@ -318,22 +313,6 @@ export class GameScene extends Phaser.Scene {
 
     const from = localPlayer.position;
     const tap = { x: pointer.worldX, y: pointer.worldY };
-    const wallHit = getFirstWallHit(from, tap);
-    const end = wallHit ?? tap;
-    const angle = Math.atan2(tap.y - from.y, tap.x - from.x);
-    this.doShoot(angle, from, end);
-  }
-
-  /** Called when React fire button is pressed; aim toward screen center. */
-  shootFromButton() {
-    const localPlayer = this.gameState.players?.get(this.localPlayerId);
-    if (!localPlayer || !localPlayer.alive) return;
-
-    const cam = this.cameras.main;
-    const centerX = cam.scrollX + cam.width / 2 / cam.zoom;
-    const centerY = cam.scrollY + cam.height / 2 / cam.zoom;
-    const from = localPlayer.position;
-    const tap = { x: centerX, y: centerY };
     const wallHit = getFirstWallHit(from, tap);
     const end = wallHit ?? tap;
     const angle = Math.atan2(tap.y - from.y, tap.x - from.x);

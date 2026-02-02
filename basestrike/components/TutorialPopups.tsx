@@ -13,7 +13,7 @@ const STEPS: { title: string; body: string; cta: string }[] = [
   },
   {
     title: "Shoot",
-    body: "Tap anywhere on the right side of the screen, or use the fire button, to shoot.",
+    body: "Tap anywhere on the right side of the screen to shoot.",
     cta: "Next",
   },
   {
