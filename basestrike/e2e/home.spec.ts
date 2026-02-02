@@ -23,7 +23,7 @@ test.describe("UI navigation", () => {
     await expect(page.locator(".game-container").first()).toBeVisible();
   });
 
-  test("Play tab shows HUD elements (minimap area, scorebar, health, weapon)", async ({ page }) => {
+  test("Play tab shows HUD elements (scorebar, health, weapon)", async ({ page }) => {
     await page.goto("/");
     await page.getByText(/Joystick: move/).first().waitFor({ state: "visible" });
     await page.locator(".game-container").first().waitFor({ state: "visible" });

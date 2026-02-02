@@ -2,7 +2,7 @@
 
 import { div as MotionDiv } from "framer-motion/client";
 import type { HudState } from "@/lib/game/types";
-import { Minimap, Scorebar, HealthBar, WeaponHUD } from "@/components/HUD";
+import { Scorebar, HealthBar, WeaponHUD } from "@/components/HUD";
 
 interface GameHudProps {
   state: HudState | null;
@@ -10,7 +10,7 @@ interface GameHudProps {
   visible: boolean;
 }
 
-/** Industry-standard FPS-style HUD overlay. Composes Minimap, Scorebar, HealthBar, WeaponHUD at edges only. */
+/** FPS-style HUD overlay. Composes Scorebar, HealthBar, WeaponHUD at edges only. */
 export function GameHud({ state, visible }: GameHudProps) {
   if (!visible) return null;
 
@@ -21,7 +21,6 @@ export function GameHud({ state, visible }: GameHudProps) {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
     >
-      <Minimap state={state} />
       <Scorebar state={state} />
       <HealthBar state={state} />
       <WeaponHUD state={state} />
